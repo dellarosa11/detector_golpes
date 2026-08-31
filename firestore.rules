@@ -1,0 +1,12 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // O histórico pertence ao UID da sessão. Mesmo conhecendo outro caminho,
+    // um usuário não pode ler nem modificar análises de outra conta.
+    match /users/{userId}/analyses/{analysisId} {
+      allow read, create, update, delete: if request.auth != null
+        && request.auth.uid == userId;
+    }
+  }
+}

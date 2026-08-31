@@ -1,0 +1,11 @@
+# Servidor HTTP e validação dos dados de entrada/saída.
+fastapi>=0.116,<1
+# Verificação dos tokens enviados pelo Firebase Auth.
+firebase-admin>=7,<8
+# Carregamento seguro dos pesos do modelo.
+safetensors>=0.5,<1
+# Inferência do BERTimbau.
+torch>=2.7,<3
+transformers>=5.16,<6
+# Servidor ASGI usado no desenvolvimento e no contêiner.
+uvicorn[standard]>=0.35,<1

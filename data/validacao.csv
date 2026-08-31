@@ -1,0 +1,361 @@
+id,texto,nivel,categoria,origem,split
+msg_00002,"Ei, tudo bem? O pedido 61973 com o relógio saiu para entrega. Você já estava acompanhando pelo aplicativo. Pode confirmar o recebimento?",baixo,entrega_esperada,sintetico_v1,validacao
+msg_00014,Você foi aprovado para uma vaga à qual não se lembra de ter se candidatado. Confirme seu interesse. Atenciosamente.,medio,vaga_duvidosa,sintetico_v1,validacao
+msg_00044,Um grupo privado está ensinando uma estratégia que promete resultados rápidos no mercado financeiro. Aguardo seu retorno.,medio,investimento_duvidoso,sintetico_v1,validacao
+msg_00047,Seus dados cadastrais precisam ser atualizados. Inicie a revisão em conta-pendente.example.,medio,atualizacao_cadastral,sintetico_v1,validacao
+msg_00056,"Olá! Peguei seu contato com um conhecido, mas prefiro explicar o assunto por mensagem. Fico à disposição.",medio,contato_desconhecido,sintetico_v1,validacao
+msg_00069,"Confirmamos o cancelamento pedido por você. O estorno de R$ 42,00 aparecerá na próxima fatura. Qualquer dúvida, responda por aqui.",baixo,suporte_solicitado,sintetico_v1,validacao
+msg_00089,"Se não pagar R$ 480,00 agora, seu CPF será bloqueado e a polícia será acionada! Aguardo seu retorno.",alto,ameaca_bloqueio,sintetico_v1,validacao
+msg_00109,"Boa noite! Seus dados cadastrais precisam ser atualizados. Inicie a revisão em entrega-atualiza.example. Qualquer dúvida, responda por aqui.",medio,atualizacao_cadastral,sintetico_v1,validacao
+msg_00112,Opa! Seu código de recuperação chegou. Passe todos os dígitos agora antes que ele expire. Confira quando puder.,alto,codigo_verificacao,sintetico_v1,validacao
+msg_00117,Bom dia! Um grupo privado está ensinando uma estratégia que promete resultados rápidos no mercado financeiro. Aguardo seu retorno.,medio,investimento_duvidoso,sintetico_v1,validacao
+msg_00120,"Ei, tudo bem? Sua compra de teclado será entregue quarta-feira. Não é necessário realizar pagamento adicional. Qualquer dúvida, responda por aqui.",baixo,entrega_esperada,sintetico_v1,validacao
+msg_00128,"Opa! Identificamos uma cobrança de R$ 75,50 vinculada ao seu nome. Entre em contato para consultar. Atenciosamente.",medio,cobranca_duvidosa,sintetico_v1,validacao
+msg_00132,"Você foi selecionado para comprar um computador por R$ 250,00. A quantidade é limitada. Obrigado.",medio,oferta_improvavel,sintetico_v1,validacao
+msg_00137,"Boa tarde! O endereço do pedido 58340 foi confirmado no momento da compra. Qualquer dúvida, responda por aqui.",baixo,entrega_esperada,sintetico_v1,validacao
+msg_00187,"Enviei um comprovante, mas você precisa devolver a diferença por Pix antes de conferir o saldo!",alto,fraude_marketplace,sintetico_v1,validacao
+msg_00198,"Boa tarde! Peguei seu contato com um conhecido, mas prefiro explicar o assunto por mensagem. Atenciosamente.",medio,contato_desconhecido,sintetico_v1,validacao
+msg_00203,"Olá! Estou usando um número pessoal. Pague a nota enviada e não confirme com mais ninguém. Qualquer dúvida, responda por aqui.",alto,fraude_executivo,sintetico_v1,validacao
+msg_00206,Bom dia! Você consegue conferir os slides e deixar seus comentários até às 14h? Aguardo seu retorno.,baixo,trabalho_estudo,sintetico_v1,validacao
+msg_00220,Boa noite! Sua compra de carregador será entregue amanhã. Não é necessário realizar pagamento adicional! Aguardo seu retorno.,baixo,entrega_esperada,sintetico_v1,validacao
+msg_00222,"Olá, tudo certo? O suporte encerrou o chamado. Caso o problema continue, responda pelo canal em que você iniciou o atendimento! Fico à disposição.",baixo,suporte_solicitado,sintetico_v1,validacao
+msg_00229,"Bom dia! Recebemos uma solicitação de cobrança, mas precisamos confirmar se os dados estão corretos! Me avise quando puder.",medio,cobranca_duvidosa,sintetico_v1,validacao
+msg_00238,Oi! Recebi o teclado do pedido 58340. A caixa chegou em boas condições.,baixo,entrega_esperada,sintetico_v1,validacao
+msg_00242,O banco informa que não existe taxa para liberar estorno ou cancelar transferência. Fico à disposição.,baixo,informativo_financeiro,sintetico_v1,validacao
+msg_00244,"Olá! Você tem um reembolso a receber. Envie foto do documento, cartão e senha. Qualquer dúvida, responda por aqui.",alto,beneficio_com_taxa,sintetico_v1,validacao
+msg_00245,Opa! Sua encomenda não pôde ser entregue por dados incompletos. Atualize o endereço em suporte-verificacao.example.,medio,entrega_pendente,sintetico_v1,validacao
+msg_00259,"Olá, tudo certo? O professor colocou as orientações da atividade no portal da faculdade. Confira quando puder.",baixo,trabalho_estudo,sintetico_v1,validacao
+msg_00260,Oi! A apresentação ficou marcada para sábado às 9h30.,baixo,trabalho_estudo,sintetico_v1,validacao
+msg_00261,Detectamos uma tentativa de acesso por um tablet. Verifique a atividade no link desta mensagem. Atenciosamente.,medio,acesso_incomum,sintetico_v1,validacao
+msg_00271,Seu pacote pode ser devolvido ao remetente. Verifique o status no link recebido nesta conversa!,medio,entrega_pendente,sintetico_v1,validacao
+msg_00273,"Olá! Você consegue conferir os slides e deixar seus comentários até às 14h? Qualquer dúvida, me chama. Me avise quando puder.",baixo,trabalho_estudo,sintetico_v1,validacao
+msg_00278,"Boa noite! Vou chegar às 8h. Se mudar alguma coisa, eu aviso por aqui. Obrigado! Obrigado.",baixo,conversa_cotidiana,sintetico_v1,validacao
+msg_00281,"Opa! Não consigo falar por telefone. Mande R$ 480,00 por Pix e não avise mais ninguém! Confira quando puder.",alto,pix_urgente,sintetico_v1,validacao
+msg_00285,"Seu número foi sorteado. Envie um Pix de liberação antes de resgatar o valor! Qualquer dúvida, responda por aqui.",alto,premio_com_taxa,sintetico_v1,validacao
+msg_00286,"Olá! Vou chegar às 16h30. Se mudar alguma coisa, eu aviso por aqui. Obrigado! Responda quando puder.",baixo,conversa_cotidiana,sintetico_v1,validacao
+msg_00323,Lembrete de segurança: nunca informe sua senha ou código de verificação por mensagem. Consulte sempre o aplicativo oficial. Responda quando puder.,baixo,aviso_seguranca,sintetico_v1,validacao
+msg_00324,Boa tarde! Há uma atualização disponível para sua conta em entrega-atualiza.example. Estamos aguardando sua confirmação. Fico à disposição.,medio,link_nao_solicitado,sintetico_v1,validacao
+msg_00328,"Enviei um comprovante, mas você precisa devolver a diferença por Pix antes de conferir o saldo. Me avise quando puder.",alto,fraude_marketplace,sintetico_v1,validacao
+msg_00336,Boa tarde! Estou falando em nome da empresa sobre uma solicitação no seu CPF. Obrigado.,medio,contato_desconhecido,sintetico_v1,validacao
+msg_00347,Opa! Uma pesquisa não solicitada pede informações de contato para liberar um brinde. Pode confirmar o recebimento?,medio,pesquisa_com_premio,sintetico_v1,validacao
+msg_00356,"Você foi selecionado para comprar um relógio por R$ 18,90. A quantidade é limitada! Responda quando puder.",medio,oferta_improvavel,sintetico_v1,validacao
+msg_00366,"Boa tarde! Conforme o chamado que você abriu, o atendimento está agendado para segunda-feira depois do almoço. Não enviaremos pedido de senha. Aguardo seu retorno.",baixo,suporte_solicitado,sintetico_v1,validacao
+msg_00376,Houve uma alteração nas configurações da conta. Consulte o atendimento caso não reconheça! Confira quando puder.,medio,acesso_incomum,sintetico_v1,validacao
+msg_00379,"Opa! Seu acordo só será mantido se o boleto de R$ 1.200,00 for pago nos próximos minutos. Obrigado.",alto,boleto_falso,sintetico_v1,validacao
+msg_00381,Temos uma oportunidade com preço muito abaixo do mercado e entrega imediata. Fico à disposição.,medio,oferta_improvavel,sintetico_v1,validacao
+msg_00383,Olá! A recompensa expira hoje. Faça o depósito da taxa e envie o comprovante nesta conversa. Atenciosamente.,alto,premio_com_taxa,sintetico_v1,validacao
+msg_00388,"Um prêmio de R$ 50.000 está reservado, mas é necessário pagar o imposto antecipadamente. Fico à disposição.",alto,premio_com_taxa,sintetico_v1,validacao
+msg_00389,Olá! Lembrete de segurança: nunca informe sua senha ou código de verificação por mensagem. Consulte sempre o telefone que está no cartão. Fico à disposição.,baixo,aviso_seguranca,sintetico_v1,validacao
+msg_00400,"Boa tarde! Separei o teclado que você viu na loja. Pode passar aqui quarta-feira. Qualquer dúvida, responda por aqui.",baixo,compra_presencial,sintetico_v1,validacao
+msg_00407,Bom dia! Participe de um questionário e desbloqueie uma oferta especial no final. Responda quando puder.,medio,pesquisa_com_premio,sintetico_v1,validacao
+msg_00412,Olá! Você recebeu um documento para consultar no endereço confirmacao-imediata.example. Estamos aguardando sua confirmação. Pode confirmar o recebimento?,medio,link_nao_solicitado,sintetico_v1,validacao
+msg_00416,Há informações incompletas no seu perfil. Confirme os dados para evitar problemas futuros. Responda quando puder.,medio,atualizacao_cadastral,sintetico_v1,validacao
+msg_00419,Conheça uma oportunidade de investimento com retorno acima da média. Fale com nosso consultor. Pode confirmar o recebimento?,medio,investimento_duvidoso,sintetico_v1,validacao
+msg_00430,Boa tarde! Separei o casaco que você viu na loja. Pode passar aqui sábado. Obrigado.,baixo,compra_presencial,sintetico_v1,validacao
+msg_00435,"Olá, tudo certo? Se receber uma cobrança inesperada, confirme diretamente pelo menu de segurança do aplicativo antes de pagar.",baixo,aviso_seguranca,sintetico_v1,validacao
+msg_00446,Bom dia! Sou do atendimento e preciso validar algumas informações antes de continuar. Atenciosamente.,medio,contato_desconhecido,sintetico_v1,validacao
+msg_00447,"Boa noite! A alteração de senha solicitada por você foi concluída. Se não reconhecer, entre no site oficial digitado no navegador sem usar links da mensagem.",baixo,recuperacao_solicitada,sintetico_v1,validacao
+msg_00449,"Recebemos várias tentativas de entrada. A mensagem pede confirmação, mas não informa o canal oficial. Qualquer dúvida, responda por aqui.",medio,acesso_incomum,sintetico_v1,validacao
+msg_00459,"Boa noite! Identificamos uma cobrança de R$ 75,50 vinculada ao seu nome. Entre em contato para consultar. Fico à disposição.",medio,cobranca_duvidosa,sintetico_v1,validacao
+msg_00469,"Para concluir a atualização, digite sua senha bancária completa e a data de nascimento. Aguardo seu retorno.",alto,phishing_credenciais,sintetico_v1,validacao
+msg_00477,"Opa! Para provar seu amor, transfira o valor solicitado e mantenha isso em segredo.",alto,fraude_romantica,sintetico_v1,validacao
+msg_00486,Temos uma vaga de trabalho remoto com início imediato. Não é necessário processo seletivo. Confira quando puder.,medio,vaga_duvidosa,sintetico_v1,validacao
+msg_00487,Seus dados cadastrais precisam ser atualizados. Inicie a revisão em conta-pendente.example. Responda quando puder.,medio,atualizacao_cadastral,sintetico_v1,validacao
+msg_00490,Não esqueça de levar o documento para a matrícula na empresa.,baixo,lembrete_pessoal,sintetico_v1,validacao
+msg_00491,Temos uma oportunidade com preço muito abaixo do mercado e entrega imediata. Obrigado.,medio,oferta_improvavel,sintetico_v1,validacao
+msg_00495,Boa noite! Passei no mercado e já comprei o que estava na lista! Atenciosamente.,baixo,conversa_cotidiana,sintetico_v1,validacao
+msg_00497,Opa! Enviei a versão atualizada do trabalho para o grupo da turma. Depois conversamos sobre os ajustes. Me avise quando puder.,baixo,trabalho_estudo,sintetico_v1,validacao
+msg_00503,Bom dia! O endereço do pedido 46722 foi confirmado no momento da compra. Tudo bem?,baixo,entrega_esperada,sintetico_v1,validacao
+msg_00515,O banco informa que não existe taxa para liberar estorno ou cancelar transferência. Pode confirmar o recebimento?,baixo,informativo_financeiro,sintetico_v1,validacao
+msg_00525,Oi! Detectamos uma tentativa de acesso por um notebook. Verifique a atividade no link desta mensagem! Atenciosamente.,medio,acesso_incomum,sintetico_v1,validacao
+msg_00526,Bom dia! O código de barras mudou por erro no sistema. Faça o pagamento para uma pessoa física! Fico à disposição.,alto,boleto_falso,sintetico_v1,validacao
+msg_00527,"Seu acordo só será mantido se o boleto de R$ 1.200,00 for pago nos próximos minutos. Obrigado.",alto,boleto_falso,sintetico_v1,validacao
+msg_00537,Oi! Seu protocolo 46722 foi atualizado. Consulte o andamento pelo site oficial digitado no navegador! Aguardo seu retorno.,baixo,suporte_solicitado,sintetico_v1,validacao
+msg_00547,"Você foi selecionado para comprar um carregador por R$ 189,90. A quantidade é limitada. Obrigado.",medio,oferta_improvavel,sintetico_v1,validacao
+msg_00561,"Olá, tudo certo? Enviei a versão atualizada do trabalho para o grupo da turma! Pode confirmar o recebimento?",baixo,trabalho_estudo,sintetico_v1,validacao
+msg_00572,Boa tarde! Passei no mercado e já comprei o que estava na lista. Tudo certo por aqui. Tudo bem?,baixo,conversa_cotidiana,sintetico_v1,validacao
+msg_00573,"Entre no link e valide número do cartão, código de segurança e senha eletrônica! Responda quando puder.",alto,phishing_credenciais,sintetico_v1,validacao
+msg_00579,O robô nunca perde dinheiro. Faça o depósito inicial e indique amigos para aumentar o retorno. Tudo bem?,alto,investimento_garantido,sintetico_v1,validacao
+msg_00580,"Seu benefício social foi aprovado. Pague R$ 75,50 para liberar o depósito. Me avise quando puder.",alto,beneficio_com_taxa,sintetico_v1,validacao
+msg_00584,O banco informa que não existe taxa para liberar estorno ou cancelar transferência. Tudo bem?,baixo,informativo_financeiro,sintetico_v1,validacao
+msg_00590,Existe um débito pendente com vencimento segunda-feira. A origem não foi informada nesta mensagem. Fico à disposição.,medio,cobranca_duvidosa,sintetico_v1,validacao
+msg_00593,Opa! Último aviso: pague por esta chave desconhecida ou todos os seus dados serão divulgados. Aguardo seu retorno.,alto,ameaca_bloqueio,sintetico_v1,validacao
+msg_00599,"A atualização anual da conta está disponível por meio do link enviado. Qualquer dúvida, responda por aqui.",medio,atualizacao_cadastral,sintetico_v1,validacao
+msg_00603,Boa noite! O robô nunca perde dinheiro. Faça o depósito inicial e indique amigos para aumentar o retorno. Confira quando puder.,alto,investimento_garantido,sintetico_v1,validacao
+msg_00609,"Olá, tudo certo? Você consegue conferir os slides e deixar seus comentários até às 11h? Fico à disposição.",baixo,trabalho_estudo,sintetico_v1,validacao
+msg_00612,"Bom dia! Encontramos uma pendência no seu cadastro. Veja os detalhes em confirmacao-imediata.example. Caso já tenha resolvido, ignore. Fico à disposição.",medio,link_nao_solicitado,sintetico_v1,validacao
+msg_00634,"Bom dia! Identificamos uma cobrança de R$ 1.200,00 vinculada ao seu nome. Entre em contato para consultar! Pode confirmar o recebimento?",medio,cobranca_duvidosa,sintetico_v1,validacao
+msg_00644,Oi! A reserva para hoje está no nome de Carla e será paga no local. Pode confirmar o recebimento?,baixo,lembrete_pessoal,sintetico_v1,validacao
+msg_00647,Preciso que compre cartões-presente agora e envie os códigos por mensagem. É confidencial. Tudo bem?,alto,fraude_executivo,sintetico_v1,validacao
+msg_00649,Boa tarde! Você recebeu um documento para consultar no endereço conta-pendente.example. O acesso ficará disponível por algumas horas! Me avise quando puder.,medio,link_nao_solicitado,sintetico_v1,validacao
+msg_00650,"Olá, tudo certo? O comprovante da transferência combinada está salvo no aplicativo. Não precisa clicar em nenhum link. Confira quando puder.",baixo,pagamento_conhecido,sintetico_v1,validacao
+msg_00665,"Pai, este é meu contato novo. Preciso pagar uma conta urgente e depois devolvo o dinheiro. Aguardo seu retorno.",alto,falso_familiar,sintetico_v1,validacao
+msg_00681,Opa! Você consegue conferir os slides e deixar seus comentários até às 11h? Confira quando puder.,baixo,trabalho_estudo,sintetico_v1,validacao
+msg_00694,Boa noite! Seu acesso pelo notebook foi confirmado no aplicativo que você abriu.,baixo,recuperacao_solicitada,sintetico_v1,validacao
+msg_00696,Temos uma vaga de trabalho remoto com início imediato. Não é necessário processo seletivo. Me avise quando puder.,medio,vaga_duvidosa,sintetico_v1,validacao
+msg_00700,Opa! Você pode trazer o caderno quando vier quarta-feira? Obrigado! Atenciosamente.,baixo,conversa_cotidiana,sintetico_v1,validacao
+msg_00710,Olá! Você foi convidado para avaliar nosso atendimento e poderá receber uma recompensa. Me avise quando puder.,medio,pesquisa_com_premio,sintetico_v1,validacao
+msg_00713,Seu CPF pode ter uma pendência financeira. Consulte as condições no endereço enviado. Me avise quando puder.,medio,cobranca_duvidosa,sintetico_v1,validacao
+msg_00725,"Ei, tudo bem? O suporte encerrou o chamado. Caso o problema continue, responda pelo canal em que você iniciou o atendimento. Pode confirmar o recebimento?",baixo,suporte_solicitado,sintetico_v1,validacao
+msg_00726,O pagamento do casaco está preso. Pague uma taxa fora da plataforma para liberar a venda. Tudo bem?,alto,fraude_marketplace,sintetico_v1,validacao
+msg_00732,"Opa! A divisão da conta ficou em R$ 120,00 para cada pessoa. Qualquer dúvida, responda por aqui.",baixo,pagamento_conhecido,sintetico_v1,validacao
+msg_00735,Bom dia! Você consegue me encontrar na academia sábado às 9h30? Até mais. Atenciosamente.,baixo,conversa_cotidiana,sintetico_v1,validacao
+msg_00738,"A vaga é sua, mas precisamos de um Pix para liberar o exame admissional. Obrigado.",alto,vaga_com_taxa,sintetico_v1,validacao
+msg_00775,"Comece investindo R$ 480,00 e acompanhe os resultados pelo grupo de mensagens! Aguardo seu retorno.",medio,investimento_duvidoso,sintetico_v1,validacao
+msg_00792,"Olá, tudo certo? Você recebeu um documento para consultar no endereço suporte-verificacao.example! Pode confirmar o recebimento?",medio,link_nao_solicitado,sintetico_v1,validacao
+msg_00795,"Olá! Para trabalhar de casa, compre um kit diretamente com o recrutador e envie o comprovante! Obrigado.",alto,vaga_com_taxa,sintetico_v1,validacao
+msg_00808,"Boa tarde! Encontramos uma divergência no CEP da sua entrega. Confirme as informações ainda hoje. Qualquer dúvida, responda por aqui.",medio,entrega_pendente,sintetico_v1,validacao
+msg_00810,Seu aparelho será bloqueado permanentemente se você não instalar o aplicativo indicado. Atenciosamente.,alto,ameaca_bloqueio,sintetico_v1,validacao
+msg_00811,Opa! Pegue um empréstimo e invista conosco; o lucro certo pagará todas as parcelas. Responda quando puder.,alto,investimento_garantido,sintetico_v1,validacao
+msg_00827,Olá! Sua conta será encerrada em dez minutos. Envie a senha para impedir o bloqueio! Tudo bem?,alto,ameaca_bloqueio,sintetico_v1,validacao
+msg_00854,"Boa noite! a instituição financeira identificou uma fraude. Para cancelar a compra, faça uma transferência para a conta de segurança. Confira quando puder.",alto,falso_banco,sintetico_v1,validacao
+msg_00888,Oi! Precisamos validar seu telefone e endereço para manter o serviço ativo. Obrigado.,medio,atualizacao_cadastral,sintetico_v1,validacao
+msg_00896,"Olá, tudo certo? Precisamos validar seu telefone e endereço para manter o serviço ativo. Qualquer dúvida, responda por aqui.",medio,atualizacao_cadastral,sintetico_v1,validacao
+msg_00907,"Ei, tudo bem? Acesse entrega-atualiza.example para conferir uma informação importante. Tudo bem?",medio,link_nao_solicitado,sintetico_v1,validacao
+msg_00908,O cadastro pode ficar limitado por falta de confirmação. Responda para receber as instruções! Obrigado.,medio,atualizacao_cadastral,sintetico_v1,validacao
+msg_00914,Meu presente ficou retido na alfândega. Pague a taxa para que ele seja entregue a você. Obrigado.,alto,fraude_romantica,sintetico_v1,validacao
+msg_00915,"Boa tarde! Recebi o pagamento de R$ 480,00 que você tinha avisado. Está tudo certo! Qualquer dúvida, responda por aqui.",baixo,pagamento_conhecido,sintetico_v1,validacao
+msg_00917,Bom dia! Detectamos uma tentativa de acesso por um computador Windows. Verifique a atividade no link desta mensagem. Atenciosamente.,medio,acesso_incomum,sintetico_v1,validacao
+msg_00919,"Opa! Para provar seu amor, transfira o valor solicitado e mantenha isso em segredo. Aguardo seu retorno.",alto,fraude_romantica,sintetico_v1,validacao
+msg_00923,"Bom dia! A nota fiscal da compra de R$ 120,00 foi entregue junto com o produto. Tudo bem?",baixo,compra_presencial,sintetico_v1,validacao
+msg_00928,"Para cancelar a compra, preciso que você diga o token que apareceu no aplicativo. Aguardo seu retorno.",alto,codigo_verificacao,sintetico_v1,validacao
+msg_00933,Bom dia! A apresentação ficou marcada para sexta-feira às 18h. Não precisa responder agora. Fico à disposição.,baixo,trabalho_estudo,sintetico_v1,validacao
+msg_00942,"Bom dia! Enviei um comprovante, mas você precisa devolver a diferença por Pix antes de conferir o saldo. Aguardo seu retorno.",alto,fraude_marketplace,sintetico_v1,validacao
+msg_00949,Oi! Existe um débito pendente com vencimento quarta-feira. A origem não foi informada nesta mensagem. Responda quando puder.,medio,cobranca_duvidosa,sintetico_v1,validacao
+msg_00951,O acesso foi limitado. Envie seus dados de login nesta conversa para liberar novamente. Obrigado.,alto,phishing_credenciais,sintetico_v1,validacao
+msg_00953,Olá! Desconto especial liberado sem que você tenha feito cadastro. Confirme se deseja receber a oferta. Aguardo seu retorno.,medio,oferta_improvavel,sintetico_v1,validacao
+msg_00968,Boa tarde! Temos poucas vagas para uma operação de investimento automatizada. Obrigado.,medio,investimento_duvidoso,sintetico_v1,validacao
+msg_00969,Uma promoção reservada para seu número termina em poucas horas. Clique para conhecer as condições. Fico à disposição.,medio,oferta_improvavel,sintetico_v1,validacao
+msg_00972,"A fatura fechou em R$ 189,90. Confira os lançamentos diretamente no aplicativo antes do vencimento! Obrigado.",baixo,informativo_financeiro,sintetico_v1,validacao
+msg_00975,Olá! Você pode trazer o caderno quando vier amanhã? Me avise quando puder.,baixo,conversa_cotidiana,sintetico_v1,validacao
+msg_00983,"Olá! Sua encomenda não pôde ser entregue por dados incompletos. Atualize o endereço em premio-resgate.example. Qualquer dúvida, responda por aqui.",medio,entrega_pendente,sintetico_v1,validacao
+msg_00992,"Boa noite! Se não pagar R$ 120,00 agora, seu CPF será bloqueado e a polícia será acionada. Pode confirmar o recebimento?",alto,ameaca_bloqueio,sintetico_v1,validacao
+msg_01008,Sua encomenda não pôde ser entregue por dados incompletos. Atualize o endereço em premio-resgate.example. Atenciosamente.,medio,entrega_pendente,sintetico_v1,validacao
+msg_01012,Opa! Encontramos uma pendência no seu cadastro. Veja os detalhes em confirmacao-imediata.example. O acesso ficará disponível por algumas horas. Fico à disposição.,medio,link_nao_solicitado,sintetico_v1,validacao
+msg_01014,Conheça uma oportunidade de investimento com retorno acima da média. Fale com nosso consultor! Fico à disposição.,medio,investimento_duvidoso,sintetico_v1,validacao
+msg_01019,"Olá! Sou o diretor e estou em reunião. Faça um Pix de R$ 480,00 para este fornecedor novo sem avisar a equipe. Aguardo seu retorno.",alto,fraude_executivo,sintetico_v1,validacao
+msg_01023,Boa noite! Você foi convidado para avaliar nosso atendimento e poderá receber uma recompensa. Confira quando puder.,medio,pesquisa_com_premio,sintetico_v1,validacao
+msg_01025,"Sou o diretor e estou em reunião. Faça um Pix de R$ 250,00 para este fornecedor novo sem avisar a equipe. Atenciosamente.",alto,fraude_executivo,sintetico_v1,validacao
+msg_01044,Boa noite! Existe uma ordem contra você. Faça o Pix solicitado para evitar consequências legais. Responda quando puder.,alto,ameaca_bloqueio,sintetico_v1,validacao
+msg_01045,"O investimento apresentou variação neste mês; rentabilidade passada não garante retorno futuro. Qualquer dúvida, responda por aqui.",baixo,informativo_financeiro,sintetico_v1,validacao
+msg_01056,Conheça uma oportunidade de investimento com retorno acima da média. Fale com nosso consultor. Responda quando puder.,medio,investimento_duvidoso,sintetico_v1,validacao
+msg_01063,Opa! O pedido 61973 com o fone de ouvido saiu para entrega. Você já estava acompanhando pelo aplicativo! Obrigado.,baixo,entrega_esperada,sintetico_v1,validacao
+msg_01064,Bom dia! Você foi convidado para avaliar nosso atendimento e poderá receber uma recompensa. Pode confirmar o recebimento?,medio,pesquisa_com_premio,sintetico_v1,validacao
+msg_01091,A leitura do QR Code gerou um número. Envie esse número ao atendente para liberar a conta! Responda quando puder.,alto,codigo_verificacao,sintetico_v1,validacao
+msg_01095,Acabei de enviar um código de seis dígitos para seu celular. Informe o código aqui para confirmar o atendimento.,alto,codigo_verificacao,sintetico_v1,validacao
+msg_01097,"Ei, tudo bem? A entrega que combinamos foi reagendada para hoje depois do almoço. Confira quando puder.",baixo,entrega_esperada,sintetico_v1,validacao
+msg_01100,"Ei, tudo bem? Sua compra de carregador será entregue sábado. Não é necessário realizar pagamento adicional. Fico à disposição.",baixo,entrega_esperada,sintetico_v1,validacao
+msg_01101,"Bom dia! Depois de nossa conversa, confio em você. Faça um empréstimo para me ajudar nesta emergência. Pode confirmar o recebimento?",alto,fraude_romantica,sintetico_v1,validacao
+msg_01115,A leitura do QR Code gerou um número. Envie esse número ao atendente para liberar a conta. Tudo bem?,alto,codigo_verificacao,sintetico_v1,validacao
+msg_01121,Oi! Sua conta será encerrada em dez minutos. Envie a senha para impedir o bloqueio.,alto,ameaca_bloqueio,sintetico_v1,validacao
+msg_01124,Seu protocolo 46722 foi atualizado. Consulte o andamento pelo menu de segurança do aplicativo. Tudo bem?,baixo,suporte_solicitado,sintetico_v1,validacao
+msg_01131,Opa! Faça o pagamento imediatamente para evitar uma multa maior. Use a chave enviada nesta conversa. Confira quando puder.,alto,pix_urgente,sintetico_v1,validacao
+msg_01136,"Um prêmio de R$ 50.000 está reservado, mas é necessário pagar o imposto antecipadamente. Aguardo seu retorno.",alto,premio_com_taxa,sintetico_v1,validacao
+msg_01143,"O suporte encerrou o chamado. Caso o problema continue, responda pelo canal em que você iniciou o atendimento. Me avise quando puder.",baixo,suporte_solicitado,sintetico_v1,validacao
+msg_01148,Boa noite! A reserva está confirmada para hoje depois do almoço e o pagamento será feito no local. Tudo bem?,baixo,compra_presencial,sintetico_v1,validacao
+msg_01153,"Uma pesquisa não solicitada pede informações de contato para liberar um brinde. Qualquer dúvida, responda por aqui.",medio,pesquisa_com_premio,sintetico_v1,validacao
+msg_01161,O pagamento do benefício depende de uma taxa via Pix para este atendente. Confira quando puder.,alto,beneficio_com_taxa,sintetico_v1,validacao
+msg_01163,"Olá, tudo certo? Sou Ana, troquei de número. Salva este contato para falarmos depois. Obrigado.",medio,contato_desconhecido,sintetico_v1,validacao
+msg_01166,"Ei, tudo bem? Acesse confirmacao-imediata.example e informe usuário, senha e CPF para evitar a suspensão da conta. Aguardo seu retorno.",alto,phishing_credenciais,sintetico_v1,validacao
+msg_01168,Um funcionário ligará para recolher seu cartão e pedirá a senha para concluir o cancelamento.,alto,falso_banco,sintetico_v1,validacao
+msg_01172,Boa tarde! Você foi aprovado para uma vaga à qual não se lembra de ter se candidatado. Confirme seu interesse. Fico à disposição.,medio,vaga_duvidosa,sintetico_v1,validacao
+msg_01176,Bom dia! Seu código de recuperação chegou. Passe todos os dígitos agora antes que ele expire. Me avise quando puder.,alto,codigo_verificacao,sintetico_v1,validacao
+msg_01187,"Ei, tudo bem? A mensalidade de R$ 1.200,00 apareceu normalmente no aplicativo do banco. Tudo bem?",baixo,pagamento_conhecido,sintetico_v1,validacao
+msg_01193,"Você iniciou uma recuperação de senha no menu de segurança do aplicativo. Digite o código somente na tela que você abriu e não o compartilhe! Qualquer dúvida, responda por aqui.",baixo,recuperacao_solicitada,sintetico_v1,validacao
+msg_01194,"Boa tarde! Preciso que faça um Pix de R$ 75,50 agora. Depois explico o motivo. Tudo bem?",alto,pix_urgente,sintetico_v1,validacao
+msg_01199,"Seu currículo foi selecionado para uma oportunidade de R$ 120,00 por semana. Responda para saber mais. Atenciosamente.",medio,vaga_duvidosa,sintetico_v1,validacao
+msg_01201,"Olá, tudo certo? A divisão da conta ficou em R$ 1.200,00 para cada pessoa. Atenciosamente.",baixo,pagamento_conhecido,sintetico_v1,validacao
+msg_01222,Seus dados cadastrais precisam ser atualizados. Inicie a revisão em premio-resgate.example. Pode confirmar o recebimento?,medio,atualizacao_cadastral,sintetico_v1,validacao
+msg_01235,"Ei, tudo bem? A reunião foi confirmada para amanhã às 16h30. Até mais! Responda quando puder.",baixo,conversa_cotidiana,sintetico_v1,validacao
+msg_01238,"A alteração de senha solicitada por você foi concluída. Se não reconhecer, entre no telefone que está no cartão sem usar links da mensagem. Responda quando puder.",baixo,recuperacao_solicitada,sintetico_v1,validacao
+msg_01240,Boa noite! O acesso foi limitado. Envie seus dados de login nesta conversa para liberar novamente.,alto,phishing_credenciais,sintetico_v1,validacao
+msg_01242,A reserva para segunda-feira está no nome de Ana e será paga no local. Tudo bem?,baixo,lembrete_pessoal,sintetico_v1,validacao
+msg_01257,Olá! Você pode trazer o caderno quando vier sábado? Me avise quando puder. Confira quando puder.,baixo,conversa_cotidiana,sintetico_v1,validacao
+msg_01260,Bom dia! A reserva está confirmada para quarta-feira às 18h e o pagamento será feito no local. Obrigado.,baixo,compra_presencial,sintetico_v1,validacao
+msg_01287,Oi! A reserva está confirmada para segunda-feira às 18h e o pagamento será feito no local. Me avise quando puder.,baixo,compra_presencial,sintetico_v1,validacao
+msg_01294,"Olá! Para trabalhar de casa, compre um kit diretamente com o recrutador e envie o comprovante. Tudo bem?",alto,vaga_com_taxa,sintetico_v1,validacao
+msg_01304,"Olá, tudo certo? O comprovante da transferência combinada está salvo no aplicativo. Não precisa clicar em nenhum link. Qualquer dúvida, responda por aqui.",baixo,pagamento_conhecido,sintetico_v1,validacao
+msg_01312,"Olá, tudo certo? Vou chegar depois do almoço. Se mudar alguma coisa, eu aviso por aqui. Até mais. Me avise quando puder.",baixo,conversa_cotidiana,sintetico_v1,validacao
+msg_01316,Autorize o atendente a movimentar o cursor e não feche o aplicativo durante a transferência. Confira quando puder.,alto,acesso_remoto,sintetico_v1,validacao
+msg_01332,Boa noite! Uma pesquisa não solicitada pede informações de contato para liberar um brinde. Me avise quando puder.,medio,pesquisa_com_premio,sintetico_v1,validacao
+msg_01334,"Se não pagar R$ 250,00 agora, seu CPF será bloqueado e a polícia será acionada. Aguardo seu retorno.",alto,ameaca_bloqueio,sintetico_v1,validacao
+msg_01336,Ignore o procedimento da empresa; esta transferência é urgente e deve ficar em segredo. Fico à disposição.,alto,fraude_executivo,sintetico_v1,validacao
+msg_01347,"Boa noite! A vaga é sua, mas precisamos de um Pix para liberar o exame admissional!",alto,vaga_com_taxa,sintetico_v1,validacao
+msg_01360,Olá! Sou do atendimento e preciso validar algumas informações antes de continuar. Tudo bem?,medio,contato_desconhecido,sintetico_v1,validacao
+msg_01366,O código de acesso foi enviado porque você pediu. Nenhum atendente solicitará esse código por telefone ou conversa. Me avise quando puder.,baixo,recuperacao_solicitada,sintetico_v1,validacao
+msg_01373,"Boa tarde! Sou Bruno, troquei de número. Salva este contato para falarmos depois. Aguardo seu retorno.",medio,contato_desconhecido,sintetico_v1,validacao
+msg_01375,"Olá! Preciso que faça um Pix de R$ 42,00 agora. Depois explico o motivo. Aguardo seu retorno.",alto,pix_urgente,sintetico_v1,validacao
+msg_01377,"Olá! Para cancelar a compra, preciso que você diga o token que apareceu no aplicativo. Fico à disposição.",alto,codigo_verificacao,sintetico_v1,validacao
+msg_01382,"Ei, tudo bem? O acesso foi limitado. Envie seus dados de login nesta conversa para liberar novamente!",alto,phishing_credenciais,sintetico_v1,validacao
+msg_01384,"Boa tarde! Trabalho simples pelo celular, horários livres e pagamento diário. Peça as instruções! Tudo bem?",medio,vaga_duvidosa,sintetico_v1,validacao
+msg_01388,"Olá! Fiz o Pix de R$ 480,00 referente à nossa compra combinada. Confira quando puder. Tudo bem?",baixo,pagamento_conhecido,sintetico_v1,validacao
+msg_01393,O aniversário da Ana será quarta-feira às 14h. Cada pessoa pode levar alguma coisa. Responda quando puder.,baixo,lembrete_pessoal,sintetico_v1,validacao
+msg_01395,"Uma entrega está aguardando sua confirmação, mas a mensagem não informa qual compra originou o envio. Fico à disposição.",medio,entrega_pendente,sintetico_v1,validacao
+msg_01403,"Acesse entrega-atualiza.example e informe usuário, senha e CPF para evitar a suspensão da conta. Pode confirmar o recebimento?",alto,phishing_credenciais,sintetico_v1,validacao
+msg_01408,"Boa noite! Seu currículo foi selecionado para uma oportunidade de R$ 480,00 por semana. Responda para saber mais. Aguardo seu retorno.",medio,vaga_duvidosa,sintetico_v1,validacao
+msg_01414,Ignore o procedimento da empresa; esta transferência é urgente e deve ficar em segredo.,alto,fraude_executivo,sintetico_v1,validacao
+msg_01420,"Oi! A vaga é sua, mas precisamos de um Pix para liberar o exame admissional. Tudo bem?",alto,vaga_com_taxa,sintetico_v1,validacao
+msg_01431,"Trabalho simples pelo celular, horários livres e pagamento diário. Peça as instruções. Confira quando puder.",medio,vaga_duvidosa,sintetico_v1,validacao
+msg_01432,A atualização anual da conta está disponível por meio do link enviado. Aguardo seu retorno.,medio,atualizacao_cadastral,sintetico_v1,validacao
+msg_01435,"Não compartilhe o código recebido por SMS, mesmo que alguém diga ser funcionário do banco. Fico à disposição.",baixo,aviso_seguranca,sintetico_v1,validacao
+msg_01440,Olá! Autorize o atendente a movimentar o cursor e não feche o aplicativo durante a transferência.,alto,acesso_remoto,sintetico_v1,validacao
+msg_01443,"Boa noite! Recebemos uma solicitação de cobrança, mas precisamos confirmar se os dados estão corretos! Me avise quando puder.",medio,cobranca_duvidosa,sintetico_v1,validacao
+msg_01449,"Oi! Se receber uma cobrança inesperada, confirme diretamente pelo canal oficial de atendimento antes de pagar. Atenciosamente.",baixo,aviso_seguranca,sintetico_v1,validacao
+msg_01450,Opa! Um grupo privado está ensinando uma estratégia que promete resultados rápidos no mercado financeiro! Tudo bem?,medio,investimento_duvidoso,sintetico_v1,validacao
+msg_01452,"Quero muito encontrar você, mas preciso de R$ 1.200,00 para comprar a passagem. Não conte a ninguém! Aguardo seu retorno.",alto,fraude_romantica,sintetico_v1,validacao
+msg_01475,O suporte precisa controlar seu tablet. Baixe o programa enviado e aceite todas as permissões! Atenciosamente.,alto,acesso_remoto,sintetico_v1,validacao
+msg_01481,"Opa! Você recebeu um documento para consultar no endereço entrega-atualiza.example. Caso já tenha resolvido, ignore. Tudo bem?",medio,link_nao_solicitado,sintetico_v1,validacao
+msg_01496,Lembrete de segurança: nunca informe sua senha ou código de verificação por mensagem. Consulte sempre o menu de segurança do aplicativo. Pode confirmar o recebimento?,baixo,aviso_seguranca,sintetico_v1,validacao
+msg_01497,Olá! A reunião foi confirmada para segunda-feira no fim da tarde. Responda quando puder.,baixo,conversa_cotidiana,sintetico_v1,validacao
+msg_01505,"Olá, tudo certo? Encontramos uma pendência no seu cadastro. Veja os detalhes em suporte-verificacao.example. Caso já tenha resolvido, ignore. Responda quando puder.",medio,link_nao_solicitado,sintetico_v1,validacao
+msg_01510,"Conforme o chamado que você abriu, o atendimento está agendado para hoje às 11h. Não enviaremos pedido de senha! Tudo bem?",baixo,suporte_solicitado,sintetico_v1,validacao
+msg_01511,Boa noite! Seu pacote pode ser devolvido ao remetente. Verifique o status no link recebido nesta conversa! Me avise quando puder.,medio,entrega_pendente,sintetico_v1,validacao
+msg_01513,"Boa tarde! Seu benefício social foi aprovado. Pague R$ 120,00 para liberar o depósito! Me avise quando puder.",alto,beneficio_com_taxa,sintetico_v1,validacao
+msg_01519,Um grupo privado está ensinando uma estratégia que promete resultados rápidos no mercado financeiro! Pode confirmar o recebimento?,medio,investimento_duvidoso,sintetico_v1,validacao
+msg_01539,Oi! Um novo dispositivo tentou acessar sua conta. Confirme se reconhece o acesso. Fico à disposição.,medio,acesso_incomum,sintetico_v1,validacao
+msg_01542,"Olá, tudo certo? A fatura fechou em R$ 120,00. Confira os lançamentos diretamente no aplicativo antes do vencimento! Fico à disposição.",baixo,informativo_financeiro,sintetico_v1,validacao
+msg_01547,Olá! Acesse conta-pendente.example para conferir uma informação importante!,medio,link_nao_solicitado,sintetico_v1,validacao
+msg_01552,Oi! Seu código de recuperação chegou. Passe todos os dígitos agora antes que ele expire. Aguardo seu retorno.,alto,codigo_verificacao,sintetico_v1,validacao
+msg_01562,"Oi! Vou chegar às 16h30. Se mudar alguma coisa, eu aviso por aqui. Me avise quando puder! Atenciosamente.",baixo,conversa_cotidiana,sintetico_v1,validacao
+msg_01563,Você foi convidado para avaliar nosso atendimento e poderá receber uma recompensa. Tudo bem?,medio,pesquisa_com_premio,sintetico_v1,validacao
+msg_01576,Bom dia! O pagamento do benefício depende de uma taxa via Pix para este atendente! Aguardo seu retorno.,alto,beneficio_com_taxa,sintetico_v1,validacao
+msg_01577,Olá! Você foi aprovado para uma vaga à qual não se lembra de ter se candidatado. Confirme seu interesse. Aguardo seu retorno.,medio,vaga_duvidosa,sintetico_v1,validacao
+msg_01583,"Boa tarde! A divisão da conta ficou em R$ 189,90 para cada pessoa. Tudo bem?",baixo,pagamento_conhecido,sintetico_v1,validacao
+msg_01584,"Boa noite! O professor colocou as orientações da atividade no portal da faculdade. Qualquer dúvida, me chama. Tudo bem?",baixo,trabalho_estudo,sintetico_v1,validacao
+msg_01603,O banco informa que não existe taxa para liberar estorno ou cancelar transferência. Responda quando puder.,baixo,informativo_financeiro,sintetico_v1,validacao
+msg_01606,Mude os dados bancários do fornecedor e processe o pagamento antes da aprovação normal. Confira quando puder.,alto,fraude_executivo,sintetico_v1,validacao
+msg_01627,Uma promoção reservada para seu número termina em poucas horas. Clique para conhecer as condições.,medio,oferta_improvavel,sintetico_v1,validacao
+msg_01633,"Boa noite! A alteração de senha solicitada por você foi concluída. Se não reconhecer, entre no site oficial digitado no navegador sem usar links da mensagem! Pode confirmar o recebimento?",baixo,recuperacao_solicitada,sintetico_v1,validacao
+msg_01636,"Opa! O produto está disponível, mas confirme pessoalmente antes de efetuar qualquer pagamento. Pode confirmar o recebimento?",baixo,compra_presencial,sintetico_v1,validacao
+msg_01644,"Oi! A divisão da conta ficou em R$ 120,00 para cada pessoa. Obrigado.",baixo,pagamento_conhecido,sintetico_v1,validacao
+msg_01650,Preciso que compre cartões-presente agora e envie os códigos por mensagem. É confidencial. Pode confirmar o recebimento?,alto,fraude_executivo,sintetico_v1,validacao
+msg_01652,"Oi! Preciso que faça um Pix de R$ 42,00 agora. Depois explico o motivo. Obrigado.",alto,pix_urgente,sintetico_v1,validacao
+msg_01660,Bom dia! Mude os dados bancários do fornecedor e processe o pagamento antes da aprovação normal!,alto,fraude_executivo,sintetico_v1,validacao
+msg_01663,Oi! Você pode trazer o caderno quando vier terça-feira? Me avise quando puder. Obrigado.,baixo,conversa_cotidiana,sintetico_v1,validacao
+msg_01671,A reserva para terça-feira está no nome de Rafael e será paga no local!,baixo,lembrete_pessoal,sintetico_v1,validacao
+msg_01675,Temos informação privilegiada e retorno garantido. Esta oportunidade deve permanecer em segredo. Fico à disposição.,alto,investimento_garantido,sintetico_v1,validacao
+msg_01680,Bom dia! Seu protocolo 74518 foi atualizado. Consulte o andamento pelo menu de segurança do aplicativo. Responda quando puder.,baixo,suporte_solicitado,sintetico_v1,validacao
+msg_01685,Deposite a taxa do uniforme hoje e receba o contrato somente depois do pagamento.,alto,vaga_com_taxa,sintetico_v1,validacao
+msg_01705,"Opa! Você foi contratado sem entrevista. Pague R$ 189,90 pelo material obrigatório para começar. Pode confirmar o recebimento?",alto,vaga_com_taxa,sintetico_v1,validacao
+msg_01706,"Opa! O orçamento solicitado ficou em R$ 42,00. Você pode analisar sem compromisso! Responda quando puder.",baixo,compra_presencial,sintetico_v1,validacao
+msg_01707,"Para bloquear uma operação de R$ 42,00, instale o aplicativo de segurança indicado pelo atendente. Pode confirmar o recebimento?",alto,falso_banco,sintetico_v1,validacao
+msg_01714,"O comprador pagou a mais por engano. Transfira R$ 189,90 imediatamente para uma terceira pessoa. Confira quando puder.",alto,fraude_marketplace,sintetico_v1,validacao
+msg_01715,"Olá, tudo certo? A fatura fechou em R$ 480,00. Confira os lançamentos diretamente no aplicativo antes do vencimento. Qualquer dúvida, responda por aqui.",baixo,informativo_financeiro,sintetico_v1,validacao
+msg_01716,Olá! Encontramos uma divergência no CEP da sua entrega. Confirme as informações ainda hoje. Atenciosamente.,medio,entrega_pendente,sintetico_v1,validacao
+msg_01719,O código de barras mudou por erro no sistema. Faça o pagamento para uma pessoa física. Fico à disposição.,alto,boleto_falso,sintetico_v1,validacao
+msg_01726,Boa noite! Autorize o atendente a movimentar o cursor e não feche o aplicativo durante a transferência. Pode confirmar o recebimento?,alto,acesso_remoto,sintetico_v1,validacao
+msg_01727,"Recebemos uma solicitação de cobrança, mas precisamos confirmar se os dados estão corretos. Aguardo seu retorno.",medio,cobranca_duvidosa,sintetico_v1,validacao
+msg_01734,"Seu acordo só será mantido se o boleto de R$ 42,00 for pago nos próximos minutos. Me avise quando puder.",alto,boleto_falso,sintetico_v1,validacao
+msg_01737,Boa tarde! Você foi convidado para avaliar nosso atendimento e poderá receber uma recompensa.,medio,pesquisa_com_premio,sintetico_v1,validacao
+msg_01738,Olá! O professor colocou as orientações da atividade no portal da faculdade. Não precisa responder agora. Tudo bem?,baixo,trabalho_estudo,sintetico_v1,validacao
+msg_01741,Opa! Temos uma vaga de trabalho remoto com início imediato. Não é necessário processo seletivo! Aguardo seu retorno.,medio,vaga_duvidosa,sintetico_v1,validacao
+msg_01749,Temos informação privilegiada e retorno garantido. Esta oportunidade deve permanecer em segredo. Pode confirmar o recebimento?,alto,investimento_garantido,sintetico_v1,validacao
+msg_01774,"Ei, tudo bem? Você pode trazer o caderno quando vier sábado? Responda quando puder.",baixo,conversa_cotidiana,sintetico_v1,validacao
+msg_01777,Oi! Sou do atendimento e preciso validar algumas informações antes de continuar. Aguardo seu retorno.,medio,contato_desconhecido,sintetico_v1,validacao
+msg_01781,Desconto especial liberado sem que você tenha feito cadastro. Confirme se deseja receber a oferta. Obrigado.,medio,oferta_improvavel,sintetico_v1,validacao
+msg_01790,"Olá, tudo certo? Vou chegar às 18h. Se mudar alguma coisa, eu aviso por aqui. Tudo certo por aqui. Tudo bem?",baixo,conversa_cotidiana,sintetico_v1,validacao
+msg_01798,Boa tarde! Você pode trazer o caderno quando vier segunda-feira? Obrigado!,baixo,conversa_cotidiana,sintetico_v1,validacao
+msg_01802,"Boa noite! Seu currículo foi selecionado para uma oportunidade de R$ 189,90 por semana. Responda para saber mais. Pode confirmar o recebimento?",medio,vaga_duvidosa,sintetico_v1,validacao
+msg_01804,Bom dia! Não esqueça de levar o documento para a matrícula na empresa.,baixo,lembrete_pessoal,sintetico_v1,validacao
+msg_01807,Opa! Você consegue me encontrar na empresa segunda-feira às 18h? Até mais. Atenciosamente.,baixo,conversa_cotidiana,sintetico_v1,validacao
+msg_01809,"Boa noite! Meu presente ficou retido na alfândega. Pague a taxa para que ele seja entregue a você! Qualquer dúvida, responda por aqui.",alto,fraude_romantica,sintetico_v1,validacao
+msg_01816,Olá! Salva meu número novo e apaga o antigo. Também preciso que pague um boleto para mim agora. Me avise quando puder.,alto,falso_familiar,sintetico_v1,validacao
+msg_01826,"Olá! O professor colocou as orientações da atividade no portal da faculdade. Qualquer dúvida, me chama. Responda quando puder.",baixo,trabalho_estudo,sintetico_v1,validacao
+msg_01827,Nossa plataforma garante 20% ao dia. Transfira o valor para a conta do consultor. Obrigado.,alto,investimento_garantido,sintetico_v1,validacao
+msg_01838,"Olá, tudo certo? Estou falando em nome da empresa sobre uma solicitação no seu CPF. Me avise quando puder.",medio,contato_desconhecido,sintetico_v1,validacao
+msg_01839,Boa noite! Você consegue me encontrar na clínica segunda-feira às 9h30? Tudo certo por aqui. Pode confirmar o recebimento?,baixo,conversa_cotidiana,sintetico_v1,validacao
+msg_01840,Bom dia! Encontramos uma divergência no CEP da sua entrega. Confirme as informações ainda hoje. Responda quando puder.,medio,entrega_pendente,sintetico_v1,validacao
+msg_01842,Último aviso: pague por esta chave desconhecida ou todos os seus dados serão divulgados.,alto,ameaca_bloqueio,sintetico_v1,validacao
+msg_01854,"Olá! Enviei um comprovante, mas você precisa devolver a diferença por Pix antes de conferir o saldo! Fico à disposição.",alto,fraude_marketplace,sintetico_v1,validacao
+msg_01867,Temos poucas vagas para uma operação de investimento automatizada! Fico à disposição.,medio,investimento_duvidoso,sintetico_v1,validacao
+msg_01876,"Olá! Se receber uma cobrança inesperada, confirme diretamente pelo aplicativo oficial antes de pagar. Pode confirmar o recebimento?",baixo,aviso_seguranca,sintetico_v1,validacao
+msg_01886,"Olá, tudo certo? Deposite a taxa do uniforme hoje e receba o contrato somente depois do pagamento.",alto,vaga_com_taxa,sintetico_v1,validacao
+msg_01891,Oi! Separei o casaco que você viu na loja. Pode passar aqui terça-feira. Me avise quando puder.,baixo,compra_presencial,sintetico_v1,validacao
+msg_01902,Uma pesquisa não solicitada pede informações de contato para liberar um brinde. Obrigado.,medio,pesquisa_com_premio,sintetico_v1,validacao
+msg_01909,Boa noite! Acesse suporte-verificacao.example para conferir uma informação importante. Aguardo seu retorno.,medio,link_nao_solicitado,sintetico_v1,validacao
+msg_01910,Bom dia! A reserva está confirmada para terça-feira às 8h e o pagamento será feito no local! Pode confirmar o recebimento?,baixo,compra_presencial,sintetico_v1,validacao
+msg_01932,"Boa tarde! Seu acordo só será mantido se o boleto de R$ 480,00 for pago nos próximos minutos! Qualquer dúvida, responda por aqui.",alto,boleto_falso,sintetico_v1,validacao
+msg_01937,Boa noite! Encontramos uma pendência no seu cadastro. Veja os detalhes em premio-resgate.example.,medio,link_nao_solicitado,sintetico_v1,validacao
+msg_01955,"Ei, tudo bem? Um prêmio de R$ 50.000 está reservado, mas é necessário pagar o imposto antecipadamente.",alto,premio_com_taxa,sintetico_v1,validacao
+msg_01958,Boa tarde! Acabei de enviar um código de seis dígitos para seu celular. Informe o código aqui para confirmar o atendimento. Responda quando puder.,alto,codigo_verificacao,sintetico_v1,validacao
+msg_01962,"A fatura fechou em R$ 1.200,00. Confira os lançamentos diretamente no aplicativo antes do vencimento! Tudo bem?",baixo,informativo_financeiro,sintetico_v1,validacao
+msg_01965,"Para bloquear uma operação de R$ 120,00, instale o aplicativo de segurança indicado pelo atendente. Me avise quando puder.",alto,falso_banco,sintetico_v1,validacao
+msg_01969,"Oferta exclusiva: o casaco está com 80% de desconto somente hoje. Consulte conta-pendente.example. Qualquer dúvida, responda por aqui.",medio,oferta_improvavel,sintetico_v1,validacao
+msg_01976,Temos uma vaga de trabalho remoto com início imediato. Não é necessário processo seletivo! Obrigado.,medio,vaga_duvidosa,sintetico_v1,validacao
+msg_01977,"Um prêmio de R$ 50.000 está reservado, mas é necessário pagar o imposto antecipadamente. Atenciosamente.",alto,premio_com_taxa,sintetico_v1,validacao
+msg_01983,"Ei, tudo bem? A reserva para sexta-feira está no nome de Larissa e será paga no local.",baixo,lembrete_pessoal,sintetico_v1,validacao
+msg_01987,O pagamento do carregador está preso. Pague uma taxa fora da plataforma para liberar a venda. Confira quando puder.,alto,fraude_marketplace,sintetico_v1,validacao
+msg_01991,Um funcionário ligará para recolher seu cartão e pedirá a senha para concluir o cancelamento. Confira quando puder.,alto,falso_banco,sintetico_v1,validacao
+msg_01999,"Oi! Seu acordo só será mantido se o boleto de R$ 1.200,00 for pago nos próximos minutos. Qualquer dúvida, responda por aqui.",alto,boleto_falso,sintetico_v1,validacao
+msg_02017,"Para cancelar a compra, preciso que você diga o token que apareceu no aplicativo. Obrigado.",alto,codigo_verificacao,sintetico_v1,validacao
+msg_02022,"Confirmamos o cancelamento pedido por você. O estorno de R$ 120,00 aparecerá na próxima fatura. Obrigado.",baixo,suporte_solicitado,sintetico_v1,validacao
+msg_02034,"Sua encomenda não pôde ser entregue por dados incompletos. Atualize o endereço em entrega-atualiza.example. Qualquer dúvida, responda por aqui.",medio,entrega_pendente,sintetico_v1,validacao
+msg_02036,"Boa noite! O orçamento solicitado ficou em R$ 250,00. Você pode analisar sem compromisso.",baixo,compra_presencial,sintetico_v1,validacao
+msg_02045,Bom dia! Acesse suporte-verificacao.example para conferir uma informação importante. O acesso ficará disponível por algumas horas. Aguardo seu retorno.,medio,link_nao_solicitado,sintetico_v1,validacao
+msg_02056,"Oi! Enviei um comprovante, mas você precisa devolver a diferença por Pix antes de conferir o saldo. Pode confirmar o recebimento?",alto,fraude_marketplace,sintetico_v1,validacao
+msg_02066,Um grupo privado está ensinando uma estratégia que promete resultados rápidos no mercado financeiro! Confira quando puder.,medio,investimento_duvidoso,sintetico_v1,validacao
+msg_02068,"Ei, tudo bem? Estou falando em nome da empresa sobre uma solicitação no seu CPF. Tudo bem?",medio,contato_desconhecido,sintetico_v1,validacao
+msg_02070,Oi! Pegue um empréstimo e invista conosco; o lucro certo pagará todas as parcelas.,alto,investimento_garantido,sintetico_v1,validacao
+msg_02071,"Ei, tudo bem? Enviei um comprovante, mas você precisa devolver a diferença por Pix antes de conferir o saldo.",alto,fraude_marketplace,sintetico_v1,validacao
+msg_02074,Boa tarde! Há uma atualização disponível para sua conta em conta-pendente.example. Aguardo seu retorno.,medio,link_nao_solicitado,sintetico_v1,validacao
+msg_02076,"Olá, tudo certo? O endereço do pedido 10482 foi confirmado no momento da compra. Responda quando puder.",baixo,entrega_esperada,sintetico_v1,validacao
+msg_02081,"Olá! Sou do atendimento e preciso validar algumas informações antes de continuar! Qualquer dúvida, responda por aqui.",medio,contato_desconhecido,sintetico_v1,validacao
+msg_02089,"Bom dia! Sua opinião vale um cupom de R$ 75,50. Preencha o formulário enviado por mensagem. Aguardo seu retorno.",medio,pesquisa_com_premio,sintetico_v1,validacao
+msg_02095,"Seu currículo foi selecionado para uma oportunidade de R$ 75,50 por semana. Responda para saber mais! Pode confirmar o recebimento?",medio,vaga_duvidosa,sintetico_v1,validacao
+msg_02096,"Boa tarde! Não consigo falar por telefone. Mande R$ 75,50 por Pix e não avise mais ninguém. Qualquer dúvida, responda por aqui.",alto,pix_urgente,sintetico_v1,validacao
+msg_02099,"Para provar seu amor, transfira o valor solicitado e mantenha isso em segredo!",alto,fraude_romantica,sintetico_v1,validacao
+msg_02104,Seu acesso pelo notebook foi confirmado no aplicativo que você abriu. Atenciosamente.,baixo,recuperacao_solicitada,sintetico_v1,validacao
+msg_02116,Boa noite! Você iniciou uma recuperação de senha no menu de segurança do aplicativo. Digite o código somente na tela que você abriu e não o compartilhe. Confira quando puder.,baixo,recuperacao_solicitada,sintetico_v1,validacao
+msg_02147,"Ei, tudo bem? Encontramos uma pendência no seu cadastro. Veja os detalhes em suporte-verificacao.example. Confira quando puder.",medio,link_nao_solicitado,sintetico_v1,validacao
+msg_02149,Bom dia! Há informações incompletas no seu perfil. Confirme os dados para evitar problemas futuros! Atenciosamente.,medio,atualizacao_cadastral,sintetico_v1,validacao
+msg_02152,Boa noite! A reserva está confirmada para amanhã às 8h e o pagamento será feito no local. Tudo bem?,baixo,compra_presencial,sintetico_v1,validacao
+msg_02159,O código de barras mudou por erro no sistema. Faça o pagamento para uma pessoa física. Atenciosamente.,alto,boleto_falso,sintetico_v1,validacao
+msg_02160,"Ei, tudo bem? Seu pacote pode ser devolvido ao remetente. Verifique o status no link recebido nesta conversa. Tudo bem?",medio,entrega_pendente,sintetico_v1,validacao
+msg_02163,Oi! O atendimento foi encerrado. Nenhum funcionário pedirá sua senha depois desta conversa.,baixo,aviso_seguranca,sintetico_v1,validacao
+msg_02166,Boa noite! Temos um assunto particular para tratar com você. Confirme se este número é seu. Obrigado.,medio,contato_desconhecido,sintetico_v1,validacao
+msg_02167,"A vaga é sua, mas precisamos de um Pix para liberar o exame admissional. Confira quando puder.",alto,vaga_com_taxa,sintetico_v1,validacao
+msg_02172,"Comece investindo R$ 75,50 e acompanhe os resultados pelo grupo de mensagens. Aguardo seu retorno.",medio,investimento_duvidoso,sintetico_v1,validacao
+msg_02176,"Pai, este é meu contato novo. Preciso pagar uma conta urgente e depois devolvo o dinheiro. Responda quando puder.",alto,falso_familiar,sintetico_v1,validacao
+msg_02181,"Bom dia! Meu aplicativo travou e preciso pagar uma conta urgente. Transfira R$ 42,00 para esta chave nova. Confira quando puder.",alto,pix_urgente,sintetico_v1,validacao
+msg_02182,"Entre no link e valide número do cartão, código de segurança e senha eletrônica. Aguardo seu retorno.",alto,phishing_credenciais,sintetico_v1,validacao
+msg_02189,Boa tarde! Acesse entrega-atualiza.example para conferir uma informação importante. Estamos aguardando sua confirmação! Responda quando puder.,medio,link_nao_solicitado,sintetico_v1,validacao
+msg_02194,"Opa! A nota fiscal da compra de R$ 120,00 foi entregue junto com o produto. Fico à disposição.",baixo,compra_presencial,sintetico_v1,validacao
+msg_02200,Oi! O banco informa que não existe taxa para liberar estorno ou cancelar transferência. Obrigado.,baixo,informativo_financeiro,sintetico_v1,validacao
+msg_02201,Oi! Oferta exclusiva: o computador está com 80% de desconto somente hoje. Consulte conta-pendente.example. Me avise quando puder.,medio,oferta_improvavel,sintetico_v1,validacao
+msg_02208,"Opa! Recebi uma dica exclusiva de investimento e posso incluir você, se responder ainda hoje. Obrigado.",medio,investimento_duvidoso,sintetico_v1,validacao
+msg_02212,Oi! Seu pacote pode ser devolvido ao remetente. Verifique o status no link recebido nesta conversa. Me avise quando puder.,medio,entrega_pendente,sintetico_v1,validacao
+msg_02223,"Opa! Sou Marcos, troquei de número. Salva este contato para falarmos depois. Responda quando puder.",medio,contato_desconhecido,sintetico_v1,validacao
+msg_02225,"O setor antifraude solicita um Pix de teste, que será devolvido após a verificação. Responda quando puder.",alto,falso_banco,sintetico_v1,validacao
+msg_02237,"Olá! Entre no link e valide número do cartão, código de segurança e senha eletrônica. Obrigado.",alto,phishing_credenciais,sintetico_v1,validacao
+msg_02244,"Bom dia! Sou Fernanda, troquei de número. Salva este contato para falarmos depois! Responda quando puder.",medio,contato_desconhecido,sintetico_v1,validacao
+msg_02245,"Olá! A mensalidade de R$ 189,90 apareceu normalmente no aplicativo do banco. Pode confirmar o recebimento?",baixo,pagamento_conhecido,sintetico_v1,validacao
+msg_02247,"Olá, tudo certo? O comprador pagou a mais por engano. Transfira R$ 189,90 imediatamente para uma terceira pessoa.",alto,fraude_marketplace,sintetico_v1,validacao
+msg_02248,"Se receber uma cobrança inesperada, confirme diretamente pelo canal oficial de atendimento antes de pagar. Atenciosamente.",baixo,aviso_seguranca,sintetico_v1,validacao
+msg_02249,Um funcionário ligará para recolher seu cartão e pedirá a senha para concluir o cancelamento. Tudo bem?,alto,falso_banco,sintetico_v1,validacao
+msg_02265,Oi! Temos poucas vagas para uma operação de investimento automatizada. Pode confirmar o recebimento?,medio,investimento_duvidoso,sintetico_v1,validacao
+msg_02267,Bom dia! Estou em uma emergência e só consigo falar por mensagem. Envie dinheiro sem comentar com ninguém. Aguardo seu retorno.,alto,falso_familiar,sintetico_v1,validacao
+msg_02280,"Boa tarde! A mensalidade de R$ 480,00 apareceu normalmente no aplicativo do banco.",baixo,pagamento_conhecido,sintetico_v1,validacao
+msg_02283,Seu número foi sorteado. Envie um Pix de liberação antes de resgatar o valor. Obrigado.,alto,premio_com_taxa,sintetico_v1,validacao
+msg_02290,"Boa noite! Não consigo falar por telefone. Mande R$ 480,00 por Pix e não avise mais ninguém. Pode confirmar o recebimento?",alto,pix_urgente,sintetico_v1,validacao
+msg_02294,Um novo dispositivo tentou acessar sua conta. Confirme se reconhece o acesso! Aguardo seu retorno.,medio,acesso_incomum,sintetico_v1,validacao
+msg_02298,Você iniciou uma recuperação de senha no aplicativo oficial. Digite o código somente na tela que você abriu e não o compartilhe! Fico à disposição.,baixo,recuperacao_solicitada,sintetico_v1,validacao
+msg_02306,Olá! Você pode trazer o caderno quando vier amanhã? Até mais. Me avise quando puder.,baixo,conversa_cotidiana,sintetico_v1,validacao
+msg_02307,O banco informa que não existe taxa para liberar estorno ou cancelar transferência! Confira quando puder.,baixo,informativo_financeiro,sintetico_v1,validacao
+msg_02318,"Bom dia! A mensalidade de R$ 250,00 apareceu normalmente no aplicativo do banco.",baixo,pagamento_conhecido,sintetico_v1,validacao
+msg_02319,Olá! A equipe vai revisar o documento segunda-feira antes da reunião. Obrigado.,baixo,trabalho_estudo,sintetico_v1,validacao
+msg_02320,"Para receber pela venda, informe número do cartão, senha e código de segurança. Obrigado.",alto,fraude_marketplace,sintetico_v1,validacao
+msg_02322,"Oi! Diego, lembre-se da consulta amanhã às 9h30. A clínica já confirmou por telefone. Tudo bem?",baixo,lembrete_pessoal,sintetico_v1,validacao
+msg_02332,Estou no exterior e minha conta foi bloqueada. Envie dinheiro para um conhecido até eu voltar. Tudo bem?,alto,fraude_romantica,sintetico_v1,validacao
+msg_02349,"Para trabalhar de casa, compre um kit diretamente com o recrutador e envie o comprovante. Tudo bem?",alto,vaga_com_taxa,sintetico_v1,validacao
+msg_02354,"Olá! Seu aparelho será bloqueado permanentemente se você não instalar o aplicativo indicado! Qualquer dúvida, responda por aqui.",alto,ameaca_bloqueio,sintetico_v1,validacao
+msg_02356,"Olá, tudo certo? Enviei um comprovante, mas você precisa devolver a diferença por Pix antes de conferir o saldo. Aguardo seu retorno.",alto,fraude_marketplace,sintetico_v1,validacao
+msg_02358,Boa noite! Seu pacote pode ser devolvido ao remetente. Verifique o status no link recebido nesta conversa. Aguardo seu retorno.,medio,entrega_pendente,sintetico_v1,validacao
+msg_02362,O código de barras mudou por erro no sistema. Faça o pagamento para uma pessoa física. Responda quando puder.,alto,boleto_falso,sintetico_v1,validacao
+msg_02363,"Boa noite! Diego, lembre-se da consulta sábado às 8h. A clínica já confirmou por telefone! Responda quando puder.",baixo,lembrete_pessoal,sintetico_v1,validacao
+msg_02364,"Seu banco não solicita transferência para cancelar uma compra. Em caso de dúvida, abra o site oficial digitado no navegador. Qualquer dúvida, responda por aqui.",baixo,aviso_seguranca,sintetico_v1,validacao
+msg_02366,"Sua opinião vale um cupom de R$ 250,00. Preencha o formulário enviado por mensagem. Pode confirmar o recebimento?",medio,pesquisa_com_premio,sintetico_v1,validacao
+msg_02380,"Ei, tudo bem? A compra de R$ 1.200,00 feita por você já aparece no histórico do cartão. Me avise quando puder.",baixo,informativo_financeiro,sintetico_v1,validacao
+msg_02390,Opa! Não esqueça de levar o documento para a matrícula na sala de estudos.,baixo,lembrete_pessoal,sintetico_v1,validacao
+msg_02391,Você iniciou uma recuperação de senha no canal oficial de atendimento. Digite o código somente na tela que você abriu e não o compartilhe. Obrigado.,baixo,recuperacao_solicitada,sintetico_v1,validacao
+msg_02392,Olá! O código de acesso foi enviado porque você pediu. Nenhum atendente solicitará esse código por telefone ou conversa. Atenciosamente.,baixo,recuperacao_solicitada,sintetico_v1,validacao
+msg_02396,O acesso foi limitado. Envie seus dados de login nesta conversa para liberar novamente. Pode confirmar o recebimento?,alto,phishing_credenciais,sintetico_v1,validacao

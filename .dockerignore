@@ -1,0 +1,14 @@
+# Arquivos de desenvolvimento que não precisam entrar na imagem da API.
+.git
+.expo
+.vscode
+node_modules
+dist
+web-build
+data
+models/*.zip
+# Ambientes locais e caches do Python aumentariam muito a imagem.
+backend/.venv
+**/__pycache__
+*.py[cod]
+.env*

@@ -1,0 +1,69 @@
+{
+  "versao": 1,
+  "semente": "0x5eed2026",
+  "total": 2400,
+  "rotulos": {
+    "baixo": 800,
+    "medio": 800,
+    "alto": 800
+  },
+  "divisoes": {
+    "treino": 1680,
+    "validacao": 360,
+    "teste": 360
+  },
+  "divisoesPorRotulo": {
+    "treino": {
+      "baixo": 560,
+      "medio": 560,
+      "alto": 560
+    },
+    "validacao": {
+      "baixo": 120,
+      "medio": 120,
+      "alto": 120
+    },
+    "teste": {
+      "baixo": 120,
+      "medio": 120,
+      "alto": 120
+    }
+  },
+  "categorias": {
+    "acesso_incomum": 80,
+    "acesso_remoto": 53,
+    "ameaca_bloqueio": 53,
+    "atualizacao_cadastral": 80,
+    "aviso_seguranca": 80,
+    "beneficio_com_taxa": 53,
+    "boleto_falso": 53,
+    "cobranca_duvidosa": 80,
+    "codigo_verificacao": 54,
+    "compra_presencial": 80,
+    "contato_desconhecido": 80,
+    "conversa_cotidiana": 80,
+    "entrega_esperada": 80,
+    "entrega_pendente": 80,
+    "falso_banco": 54,
+    "falso_familiar": 54,
+    "fraude_executivo": 53,
+    "fraude_marketplace": 53,
+    "fraude_romantica": 53,
+    "informativo_financeiro": 80,
+    "investimento_duvidoso": 80,
+    "investimento_garantido": 53,
+    "lembrete_pessoal": 80,
+    "link_nao_solicitado": 80,
+    "oferta_improvavel": 80,
+    "pagamento_conhecido": 80,
+    "pesquisa_com_premio": 80,
+    "phishing_credenciais": 54,
+    "pix_urgente": 54,
+    "premio_com_taxa": 53,
+    "recuperacao_solicitada": 80,
+    "suporte_solicitado": 80,
+    "trabalho_estudo": 80,
+    "vaga_com_taxa": 53,
+    "vaga_duvidosa": 80
+  }
+}
