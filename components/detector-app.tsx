@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
@@ -17,6 +18,7 @@ import {
   Text,
   TextInput,
   TextInputProps,
+  useColorScheme,
   View,
   ViewStyle,
 } from 'react-native';
@@ -59,6 +61,7 @@ import {
   type AnalysisType,
 } from '@/lib/firebase-data';
 import {
+  classifyImageRisk,
   classifyRisk,
   classifierErrorMessage,
   type RiskAnalysis,
@@ -71,8 +74,42 @@ import {
  * os formulários funcionais, o histórico no Firebase e a chamada da API de IA.
  */
 
-// Paleta compartilhada para manter cores e estados visuais consistentes em todas as telas.
-const palette = {
+// As duas paletas usam os mesmos nomes para que todas as telas mudem de tema juntas.
+type AppPalette = {
+  background: string;
+  authBackground: string;
+  text: string;
+  authText: string;
+  muted: string;
+  authMuted: string;
+  border: string;
+  authBorder: string;
+  surface: string;
+  surfaceRaised: string;
+  stage: string;
+  input: string;
+  dangerSurface: string;
+  dangerBorder: string;
+  successSurface: string;
+  successBorder: string;
+  warningBorder: string;
+  divider: string;
+  shadow: string;
+  heroMuted: string;
+  green: string;
+  greenSoft: string;
+  greenLight: string;
+  greenSuccess: string;
+  blue: string;
+  blueSoft: string;
+  red: string;
+  redSoft: string;
+  redTrack: string;
+  amber: string;
+  amberSoft: string;
+};
+
+const lightPalette: AppPalette = {
   background: '#F6F8FB',
   authBackground: '#F6F8FC',
   text: '#0E131C',
@@ -82,6 +119,17 @@ const palette = {
   border: '#DBE0E8',
   authBorder: '#E0E7F2',
   surface: '#FFFFFF',
+  surfaceRaised: '#FBFCFD',
+  stage: '#DDE3EC',
+  input: '#FBFCFF',
+  dangerSurface: '#FFF8F8',
+  dangerBorder: '#F2CCCC',
+  successSurface: '#F0FAF4',
+  successBorder: '#CDE9D9',
+  warningBorder: '#F7E7B8',
+  divider: '#E9EDF3',
+  shadow: '#0F1729',
+  heroMuted: '#E5F7F2',
   green: '#13473D',
   greenSoft: '#E5F5F0',
   greenLight: '#BDEBDE',
@@ -93,7 +141,47 @@ const palette = {
   redTrack: '#EDC2C2',
   amber: '#B86E0F',
   amberSoft: '#FFF5DB',
-} as const;
+};
+
+const darkPalette: AppPalette = {
+  background: '#0B1211',
+  authBackground: '#0B1118',
+  text: '#F2F7F5',
+  authText: '#F4F7FB',
+  muted: '#9AA8A4',
+  authMuted: '#9EABBC',
+  border: '#2A3935',
+  authBorder: '#2A3747',
+  surface: '#141E1C',
+  surfaceRaised: '#192421',
+  stage: '#070B0B',
+  input: '#111A18',
+  dangerSurface: '#321D20',
+  dangerBorder: '#66363B',
+  successSurface: '#153128',
+  successBorder: '#285848',
+  warningBorder: '#66512A',
+  divider: '#26332F',
+  shadow: '#000000',
+  heroMuted: '#C9EAE2',
+  green: '#2E8B76',
+  greenSoft: '#17372F',
+  greenLight: '#70C7B2',
+  greenSuccess: '#5DD29A',
+  blue: '#6F8CFF',
+  blueSoft: '#1C294D',
+  red: '#FF7A82',
+  redSoft: '#3B2024',
+  redTrack: '#71383E',
+  amber: '#F0B45C',
+  amberSoft: '#3B2D18',
+};
+
+type ThemePreference = 'system' | 'light' | 'dark';
+const themeStorageKey = '@detector-golpes/theme';
+
+// A variável ativa é atualizada apenas quando o tema muda e alimenta todos os estilos existentes.
+let palette: AppPalette = lightPalette;
 
 type ScreenName =
   | 'login'
@@ -107,9 +195,10 @@ type ScreenName =
   | 'account';
 
 type Navigate = (screen: ScreenName) => void;
+type SelectedAnalysisImage = { uri: string; imageData: string };
 
 // Converte o nível retornado pela API em textos, cores e ícones usados no resultado e histórico.
-const riskPresentation: Record<
+type RiskPresentation = Record<
   RiskLevel,
   {
     title: string;
@@ -120,35 +209,41 @@ const riskPresentation: Record<
     trackColor: string;
     icon: 'checkmark-circle' | 'alert-circle' | 'warning';
   }
-> = {
-  baixo: {
-    title: 'Baixo',
-    tone: 'low',
-    color: palette.greenSuccess,
-    backgroundColor: palette.greenSoft,
-    borderColor: '#CFE8DF',
-    trackColor: palette.greenLight,
-    icon: 'checkmark-circle',
-  },
-  medio: {
-    title: 'Médio',
-    tone: 'medium',
-    color: palette.amber,
-    backgroundColor: palette.amberSoft,
-    borderColor: '#EEDBA8',
-    trackColor: '#F0D99D',
-    icon: 'alert-circle',
-  },
-  alto: {
-    title: 'Alto',
-    tone: 'high',
-    color: palette.red,
-    backgroundColor: palette.redSoft,
-    borderColor: '#F4D6D6',
-    trackColor: palette.redTrack,
-    icon: 'warning',
-  },
-};
+>;
+
+function createRiskPresentation(activePalette: AppPalette): RiskPresentation {
+  return {
+    baixo: {
+      title: 'Baixo',
+      tone: 'low',
+      color: activePalette.greenSuccess,
+      backgroundColor: activePalette.greenSoft,
+      borderColor: activePalette.successBorder,
+      trackColor: activePalette.greenLight,
+      icon: 'checkmark-circle',
+    },
+    medio: {
+      title: 'Médio',
+      tone: 'medium',
+      color: activePalette.amber,
+      backgroundColor: activePalette.amberSoft,
+      borderColor: activePalette.warningBorder,
+      trackColor: activePalette.warningBorder,
+      icon: 'alert-circle',
+    },
+    alto: {
+      title: 'Alto',
+      tone: 'high',
+      color: activePalette.red,
+      backgroundColor: activePalette.redSoft,
+      borderColor: activePalette.dangerBorder,
+      trackColor: activePalette.redTrack,
+      icon: 'warning',
+    },
+  };
+}
+
+let riskPresentation = createRiskPresentation(palette);
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -237,9 +332,30 @@ export default function DetectorApp() {
   const [screen, setScreen] = useState<ScreenName>('login');
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [analysisMessage, setAnalysisMessage] = useState('');
+  const [analysisType, setAnalysisType] = useState<AnalysisType>('message');
+  const [analysisImage, setAnalysisImage] = useState<SelectedAnalysisImage>();
   const [analysisResult, setAnalysisResult] = useState<RiskAnalysis>();
   const [analysisError, setAnalysisError] = useState<string>();
+  const [themePreference, setThemePreference] = useState<ThemePreference>('system');
+  const systemColorScheme = useColorScheme();
   const reducedMotion = useReducedMotion();
+
+  const darkTheme =
+    themePreference === 'dark' || (themePreference === 'system' && systemColorScheme === 'dark');
+
+  // Recria a folha de estilos somente quando o tema resolvido realmente muda.
+  if (darkTheme !== isDarkTheme) applyAppTheme(darkTheme);
+
+  useEffect(() => {
+    // Restaura a escolha feita no Perfil. Na primeira abertura, segue o tema do aparelho.
+    AsyncStorage.getItem(themeStorageKey)
+      .then((storedTheme) => {
+        if (storedTheme === 'system' || storedTheme === 'light' || storedTheme === 'dark') {
+          setThemePreference(storedTheme);
+        }
+      })
+      .catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     if (!isFirebaseConfigured) return;
@@ -267,8 +383,14 @@ export default function DetectorApp() {
     const cleanMessage = analysisMessage.trim();
     setAnalysisError(undefined);
 
-    if (!cleanMessage) {
-      setAnalysisError('Cole ou digite uma mensagem antes de iniciar a análise.');
+    if (analysisType === 'image' ? !analysisImage : !cleanMessage) {
+      setAnalysisError(
+        analysisType === 'image'
+          ? 'Escolha um print ou tire uma foto antes de iniciar a análise.'
+          : analysisType === 'link'
+            ? 'Cole ou digite um link antes de iniciar a análise.'
+            : 'Cole ou digite uma mensagem antes de iniciar a análise.'
+      );
       return;
     }
 
@@ -283,13 +405,96 @@ export default function DetectorApp() {
     try {
       // O token identifica o usuário para a API; em produção ele é validado pelo Firebase Admin.
       const token = await user.getIdToken();
-      const result = await classifyRisk(cleanMessage, token);
+      const result =
+        analysisType === 'image'
+          ? await classifyImageRisk(analysisImage!.imageData, token)
+          : await classifyRisk(cleanMessage, token, analysisType);
+      // No fluxo de imagem, o histórico guarda o texto identificado pelo OCR, nunca o arquivo.
+      if (analysisType === 'image') setAnalysisMessage(result.analyzedText);
       setAnalysisResult(result);
       setScreen('result');
     } catch (error) {
       setAnalysisError(classifierErrorMessage(error));
       setScreen('analyze');
     }
+  };
+
+  const openAnalyzer = (nextType: AnalysisType) => {
+    setAnalysisType(nextType);
+    setAnalysisMessage('');
+    setAnalysisImage(undefined);
+    setAnalysisResult(undefined);
+    setAnalysisError(undefined);
+    setScreen('analyze');
+  };
+
+  const changeAnalysisType = (nextType: AnalysisType) => {
+    if (nextType === analysisType) return;
+    setAnalysisType(nextType);
+    setAnalysisMessage('');
+    setAnalysisImage(undefined);
+    setAnalysisResult(undefined);
+    setAnalysisError(undefined);
+  };
+
+  const chooseAnalysisImage = async (source: 'camera' | 'library') => {
+    setAnalysisError(undefined);
+    try {
+      const permission =
+        source === 'camera'
+          ? await ImagePicker.requestCameraPermissionsAsync()
+          : await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permission.granted) {
+        setAnalysisError(
+          source === 'camera'
+            ? 'Permita o acesso à câmera para fotografar uma mensagem.'
+            : 'Permita o acesso às fotos para escolher um print.'
+        );
+        return;
+      }
+
+      const selection =
+        source === 'camera'
+          ? await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 1 })
+          : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 1 });
+
+      if (selection.canceled || !selection.assets[0]) return;
+      const selected = selection.assets[0];
+      const resizeActions =
+        selected.width && selected.width > 1600 ? [{ resize: { width: 1600 } }] : [];
+      let processed = await manipulateAsync(selected.uri, resizeActions, {
+        base64: true,
+        compress: 0.78,
+        format: SaveFormat.JPEG,
+      });
+      let imageData = `data:image/jpeg;base64,${processed.base64 || ''}`;
+
+      if (imageData.length > 5_200_000) {
+        processed = await manipulateAsync(selected.uri, [{ resize: { width: 1200 } }], {
+          base64: true,
+          compress: 0.58,
+          format: SaveFormat.JPEG,
+        });
+        imageData = `data:image/jpeg;base64,${processed.base64 || ''}`;
+      }
+
+      if (!processed.base64 || imageData.length > 5_200_000) {
+        setAnalysisError('A imagem ficou muito grande. Escolha outro print ou recorte a área da mensagem.');
+        return;
+      }
+
+      setAnalysisMessage('');
+      setAnalysisImage({ uri: processed.uri, imageData });
+    } catch {
+      setAnalysisError('Não foi possível abrir ou preparar esta imagem. Tente novamente.');
+    }
+  };
+
+  const changeTheme = (nextTheme: ThemePreference) => {
+    setThemePreference(nextTheme);
+    // A interface muda imediatamente; a gravação mantém a escolha nas próximas aberturas.
+    void AsyncStorage.setItem(themeStorageKey, nextTheme);
   };
 
   let content: React.ReactNode;
@@ -300,15 +505,24 @@ export default function DetectorApp() {
       content = <SignupScreen navigate={setScreen} />;
       break;
     case 'home':
-      content = <HomeScreen navigate={setScreen} />;
+      content = <HomeScreen navigate={setScreen} onStartAnalysis={openAnalyzer} />;
       break;
     case 'analyze':
       content = (
         <AnalyzeScreen
           navigate={setScreen}
+          analysisType={analysisType}
+          image={analysisImage}
           message={analysisMessage}
+          onChangeType={changeAnalysisType}
           onChangeMessage={(message) => {
             setAnalysisMessage(message);
+            setAnalysisError(undefined);
+          }}
+          onChooseImage={chooseAnalysisImage}
+          onRemoveImage={() => {
+            setAnalysisImage(undefined);
+            setAnalysisMessage('');
             setAnalysisError(undefined);
           }}
           onAnalyze={startAnalysis}
@@ -317,22 +531,32 @@ export default function DetectorApp() {
       );
       break;
     case 'processing':
-      content = <ProcessingScreen />;
+      content = <ProcessingScreen analysisType={analysisType} />;
       break;
     case 'result':
       content = analysisResult ? (
         <ResultScreen
           navigate={setScreen}
-          message={analysisMessage}
+          analysisType={analysisType}
+          message={analysisResult.analyzedText || analysisMessage}
           result={analysisResult}
           userId={user?.uid}
         />
       ) : (
         <AnalyzeScreen
           navigate={setScreen}
+          analysisType={analysisType}
+          image={analysisImage}
           message={analysisMessage}
+          onChangeType={changeAnalysisType}
           onChangeMessage={(message) => {
             setAnalysisMessage(message);
+            setAnalysisError(undefined);
+          }}
+          onChooseImage={chooseAnalysisImage}
+          onRemoveImage={() => {
+            setAnalysisImage(undefined);
+            setAnalysisMessage('');
             setAnalysisError(undefined);
           }}
           onAnalyze={startAnalysis}
@@ -347,7 +571,14 @@ export default function DetectorApp() {
       content = <LearnScreen navigate={setScreen} />;
       break;
     case 'account':
-      content = <AccountScreen navigate={setScreen} user={user} />;
+      content = (
+        <AccountScreen
+          navigate={setScreen}
+          onChangeTheme={changeTheme}
+          themePreference={themePreference}
+          user={user}
+        />
+      );
       break;
     case 'login':
     default:
@@ -371,7 +602,11 @@ function PhoneFrame({ children, auth = false }: { children: React.ReactNode; aut
 
   return (
     <View style={styles.stage}>
-      <StatusBar style="dark" backgroundColor={auth ? palette.authBackground : palette.background} hidden={isWeb} />
+      <StatusBar
+        style={isDarkTheme ? 'light' : 'dark'}
+        backgroundColor={auth ? palette.authBackground : palette.background}
+        hidden={isWeb}
+      />
       <SafeAreaView
         edges={isWeb ? [] : ['top', 'right', 'bottom', 'left']}
         style={[styles.phoneFrame, auth && styles.authPhoneFrame]}>
@@ -949,7 +1184,13 @@ function BottomNavigation({
 }
 
 // Página inicial com os atalhos para análise, histórico e conteúdo educativo.
-function HomeScreen({ navigate }: { navigate: Navigate }) {
+function HomeScreen({
+  navigate,
+  onStartAnalysis,
+}: {
+  navigate: Navigate;
+  onStartAnalysis: (type: AnalysisType) => void;
+}) {
   return (
     <AppScreen activeTab="home" navigate={navigate}>
       <ScrollView
@@ -976,7 +1217,7 @@ function HomeScreen({ navigate }: { navigate: Navigate }) {
             </Text>
             <MotionPressable
               accessibilityRole="button"
-              onPress={() => navigate('analyze')}
+              onPress={() => onStartAnalysis('message')}
               style={styles.heroButton}>
               <Text style={styles.heroButtonText}>Analisar agora</Text>
             </MotionPressable>
@@ -988,13 +1229,13 @@ function HomeScreen({ navigate }: { navigate: Navigate }) {
         </Entrance>
         <View style={styles.analysisOptions}>
           <Entrance delay={220}>
-            <AnalysisOption symbol="Aa" title="Mensagem" description="Cole um texto recebido" onPress={() => navigate('analyze')} />
+            <AnalysisOption symbol="Aa" title="Mensagem" description="Cole um texto recebido" onPress={() => onStartAnalysis('message')} />
           </Entrance>
           <Entrance delay={280}>
-            <AnalysisOption symbol="↗" title="Link" description="Verifique um endereço" onPress={() => navigate('analyze')} />
+            <AnalysisOption symbol="↗" title="Link" description="Verifique um endereço" onPress={() => onStartAnalysis('link')} />
           </Entrance>
           <Entrance delay={340}>
-            <AnalysisOption symbol="▣" title="Print" description="Envie uma captura de tela" onPress={() => navigate('analyze')} />
+            <AnalysisOption symbol="▣" title="Print" description="Envie uma captura de tela" onPress={() => onStartAnalysis('image')} />
           </Entrance>
         </View>
 
@@ -1048,22 +1289,52 @@ function BackHeader({ title, onBack }: { title: string; onBack: () => void }) {
   );
 }
 
-// Campo controlado de até 1.500 caracteres; o botão só é liberado quando há conteúdo.
+// Entrada unificada para mensagem, link e print, mantendo cada fluxo claro no celular.
 function AnalyzeScreen({
   navigate,
+  analysisType,
+  image,
   message,
+  onChangeType,
   onChangeMessage,
+  onChooseImage,
+  onRemoveImage,
   onAnalyze,
   error,
 }: {
   navigate: Navigate;
+  analysisType: AnalysisType;
+  image?: SelectedAnalysisImage;
   message: string;
+  onChangeType: (type: AnalysisType) => void;
   onChangeMessage: (message: string) => void;
+  onChooseImage: (source: 'camera' | 'library') => Promise<void>;
+  onRemoveImage: () => void;
   onAnalyze: () => Promise<void>;
   error?: string;
 }) {
   const [messageFocused, setMessageFocused] = useState(false);
-  const canAnalyze = Boolean(message.trim());
+  const canAnalyze = analysisType === 'image' ? Boolean(image) : Boolean(message.trim());
+  const copy = {
+    message: {
+      title: 'Analisar mensagem',
+      subtitle: 'Cole abaixo a mensagem que você recebeu.',
+      privacy: 'Evite enviar CPF, senha, número de cartão ou outros dados pessoais.',
+      button: 'Analisar risco',
+    },
+    link: {
+      title: 'Analisar link',
+      subtitle: 'Cole o endereço sem abri-lo. A API verificará sua estrutura com segurança.',
+      privacy: 'O link não será aberto. Apenas o endereço visível será analisado.',
+      button: 'Verificar link',
+    },
+    image: {
+      title: 'Analisar imagem',
+      subtitle: 'Envie um print nítido da conversa, anúncio ou cobrança suspeita.',
+      privacy: 'A imagem é enviada somente para sua API local e não é salva no histórico.',
+      button: 'Ler imagem e analisar',
+    },
+  }[analysisType];
 
   return (
     <AppScreen>
@@ -1073,34 +1344,163 @@ function AnalyzeScreen({
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.analyzeContent}>
         <Entrance delay={20}>
-          <BackHeader title="Analisar mensagem" onBack={() => navigate('home')} />
-          <Text style={styles.analyzeSubtitle}>Cole abaixo a mensagem que você recebeu.</Text>
-        </Entrance>
-        <Entrance delay={90}>
-          <Text style={[styles.fieldTitle, messageFocused && styles.fieldTitleFocused]}>Mensagem recebida</Text>
+          <BackHeader title={copy.title} onBack={() => navigate('home')} />
+          <Text style={styles.analyzeSubtitle}>{copy.subtitle}</Text>
         </Entrance>
 
-        <Entrance delay={140}>
-          <View style={[styles.messageBox, messageFocused && styles.messageBoxFocused]}>
-            <TextInput
-              accessibilityLabel="Mensagem recebida"
-              maxLength={1500}
-              multiline
-              onBlur={() => setMessageFocused(false)}
-              onChangeText={onChangeMessage}
-              onFocus={() => setMessageFocused(true)}
-              placeholder="Ex.: “Detectamos uma compra de R$ 2.599. Caso não reconheça, acesse imediatamente...”"
-              placeholderTextColor={palette.muted}
-              selectionColor={palette.green}
-              style={styles.messageInput}
-              textAlignVertical="top"
-              value={message}
-            />
-            <Text style={[styles.characterCount, messageFocused && styles.characterCountFocused]}>
-              {message.length} / 1500 caracteres
-            </Text>
+        <Entrance delay={90}>
+          <View accessibilityRole="tablist" style={styles.analysisModeTabs}>
+            {(
+              [
+                { type: 'message', label: 'Mensagem', icon: 'chatbubble-outline' },
+                { type: 'link', label: 'Link', icon: 'link-outline' },
+                { type: 'image', label: 'Imagem', icon: 'image-outline' },
+              ] as const
+            ).map((item) => {
+              const selected = item.type === analysisType;
+              return (
+                <MotionPressable
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected }}
+                  key={item.type}
+                  onPress={() => onChangeType(item.type)}
+                  style={[styles.analysisModeTab, selected && styles.analysisModeTabSelected]}>
+                  <Ionicons
+                    name={item.icon}
+                    size={15}
+                    color={selected ? palette.green : palette.muted}
+                  />
+                  <Text style={[styles.analysisModeTabText, selected && styles.analysisModeTabTextSelected]}>
+                    {item.label}
+                  </Text>
+                </MotionPressable>
+              );
+            })}
           </View>
         </Entrance>
+
+        {analysisType === 'message' ? (
+          <Entrance delay={140}>
+            <Text style={[styles.fieldTitle, messageFocused && styles.fieldTitleFocused]}>
+              Mensagem recebida
+            </Text>
+            <View style={[styles.messageBox, messageFocused && styles.messageBoxFocused]}>
+              <TextInput
+                accessibilityLabel="Mensagem recebida"
+                maxLength={1500}
+                multiline
+                onBlur={() => setMessageFocused(false)}
+                onChangeText={onChangeMessage}
+                onFocus={() => setMessageFocused(true)}
+                placeholder="Ex.: “Detectamos uma compra de R$ 2.599. Caso não reconheça, acesse imediatamente...”"
+                placeholderTextColor={palette.muted}
+                selectionColor={palette.green}
+                style={styles.messageInput}
+                textAlignVertical="top"
+                value={message}
+              />
+              <Text style={[styles.characterCount, messageFocused && styles.characterCountFocused]}>
+                {message.length} / 1500 caracteres
+              </Text>
+            </View>
+          </Entrance>
+        ) : null}
+
+        {analysisType === 'link' ? (
+          <Entrance delay={140}>
+            <Text style={[styles.fieldTitle, messageFocused && styles.fieldTitleFocused]}>
+              Endereço recebido
+            </Text>
+            <View style={[styles.linkInputBox, messageFocused && styles.messageBoxFocused]}>
+              <Ionicons name="link-outline" size={20} color={messageFocused ? palette.green : palette.muted} />
+              <TextInput
+                accessibilityLabel="Link recebido"
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="url"
+                maxLength={2048}
+                onBlur={() => setMessageFocused(false)}
+                onChangeText={onChangeMessage}
+                onFocus={() => setMessageFocused(true)}
+                placeholder="https://exemplo.com/verificar"
+                placeholderTextColor={palette.muted}
+                selectionColor={palette.green}
+                style={styles.linkInput}
+                value={message}
+              />
+              {message ? (
+                <Pressable accessibilityLabel="Limpar link" hitSlop={8} onPress={() => onChangeMessage('')}>
+                  <Ionicons name="close-circle" size={19} color={palette.muted} />
+                </Pressable>
+              ) : null}
+            </View>
+            <Text style={styles.linkHint}>Confira principalmente o domínio antes da primeira barra “/”.</Text>
+          </Entrance>
+        ) : null}
+
+        {analysisType === 'image' ? (
+          <Entrance delay={140}>
+            <Text style={styles.fieldTitle}>Print ou foto</Text>
+            {image ? (
+              <View style={styles.selectedImageCard}>
+                <Image contentFit="contain" source={{ uri: image.uri }} style={styles.analysisImagePreview} />
+                <View style={styles.selectedImageBadge}>
+                  <Ionicons name="checkmark-circle" size={15} color={palette.greenSuccess} />
+                  <Text style={styles.selectedImageBadgeText}>Imagem pronta para leitura</Text>
+                </View>
+                <View style={styles.imageActionRow}>
+                  <MotionPressable
+                    accessibilityRole="button"
+                    onPress={() => void onChooseImage('library')}
+                    style={styles.imageSecondaryButton}>
+                    <Ionicons name="images-outline" size={16} color={palette.green} />
+                    <Text style={styles.imageSecondaryButtonText}>Trocar</Text>
+                  </MotionPressable>
+                  <MotionPressable
+                    accessibilityRole="button"
+                    onPress={() => void onChooseImage('camera')}
+                    style={styles.imageSecondaryButton}>
+                    <Ionicons name="camera-outline" size={16} color={palette.green} />
+                    <Text style={styles.imageSecondaryButtonText}>Câmera</Text>
+                  </MotionPressable>
+                  <Pressable
+                    accessibilityLabel="Remover imagem"
+                    hitSlop={8}
+                    onPress={onRemoveImage}
+                    style={styles.imageRemoveButton}>
+                    <Ionicons name="trash-outline" size={16} color={palette.red} />
+                  </Pressable>
+                </View>
+              </View>
+            ) : (
+              <View style={styles.imageUploadCard}>
+                <View style={styles.imageUploadIcon}>
+                  <Ionicons name="scan-outline" size={30} color={palette.green} />
+                </View>
+                <Text style={styles.imageUploadTitle}>Escolha uma imagem nítida</Text>
+                <Text style={styles.imageUploadDescription}>
+                  O OCR localizará o texto e o BERTimbau fará a classificação de risco.
+                </Text>
+                <View style={styles.imagePickerButtons}>
+                  <MotionPressable
+                    accessibilityRole="button"
+                    onPress={() => void onChooseImage('library')}
+                    style={styles.imagePrimaryButton}>
+                    <Ionicons name="images-outline" size={17} color="#FFFFFF" />
+                    <Text style={styles.imagePrimaryButtonText}>Galeria</Text>
+                  </MotionPressable>
+                  <MotionPressable
+                    accessibilityRole="button"
+                    onPress={() => void onChooseImage('camera')}
+                    style={styles.imageSecondaryButton}>
+                    <Ionicons name="camera-outline" size={17} color={palette.green} />
+                    <Text style={styles.imageSecondaryButtonText}>Câmera</Text>
+                  </MotionPressable>
+                </View>
+              </View>
+            )}
+          </Entrance>
+        ) : null}
 
         <Entrance delay={220}>
           <View style={styles.privacyCard}>
@@ -1108,9 +1508,7 @@ function AnalyzeScreen({
               <Ionicons name="lock-closed-outline" size={15} color={palette.green} />
               <Text style={styles.privacyCardTitle}>Privacidade</Text>
             </View>
-            <Text style={styles.privacyCardText}>
-              Evite enviar CPF, senha, número de cartão ou outros dados pessoais.
-            </Text>
+            <Text style={styles.privacyCardText}>{copy.privacy}</Text>
           </View>
         </Entrance>
 
@@ -1129,7 +1527,7 @@ function AnalyzeScreen({
             disabled={!canAnalyze}
             onPress={() => void onAnalyze()}
             style={[styles.primaryGreenButton, !canAnalyze && styles.buttonDisabled]}>
-            <Text style={styles.primaryGreenButtonText}>Analisar risco</Text>
+            <Text style={styles.primaryGreenButtonText}>{copy.button}</Text>
             <Ionicons name="sparkles-outline" size={17} color="#FFFFFF" />
           </MotionPressable>
           <Text style={styles.disclaimer}>
@@ -1142,7 +1540,7 @@ function AnalyzeScreen({
 }
 
 // Feedback visual exibido enquanto a requisição real aguarda a resposta do BERTimbau.
-function ProcessingScreen() {
+function ProcessingScreen({ analysisType }: { analysisType: AnalysisType }) {
   const reducedMotion = useReducedMotion();
   const pulse = useSharedValue(1);
   const rotation = useSharedValue(0);
@@ -1180,10 +1578,16 @@ function ProcessingScreen() {
     transform: [{ rotate: `${rotation.value * 360}deg` }],
   }));
 
+  const firstChecks =
+    analysisType === 'image'
+      ? ['Preparação da imagem', 'Leitura do texto com OCR']
+      : analysisType === 'link'
+        ? ['Validação do endereço', 'Estrutura do domínio']
+        : ['Preparação do texto', 'Tokenização em português'];
   const checks = [
-    { icon: '✓', label: 'Preparação do texto', status: 'Concluído', color: palette.greenSuccess },
-    { icon: '✓', label: 'Tokenização em português', status: 'Concluído', color: palette.greenSuccess },
-    { icon: '•', label: 'Padrões linguísticos', status: 'Analisando…', color: palette.green },
+    { icon: '✓', label: firstChecks[0], status: 'Concluído', color: palette.greenSuccess },
+    { icon: '✓', label: firstChecks[1], status: 'Concluído', color: palette.greenSuccess },
+    { icon: '•', label: 'Padrões de fraude', status: 'Analisando…', color: palette.green },
     { icon: '○', label: 'Classificação de risco', status: 'Aguardando', color: palette.muted },
   ];
 
@@ -1248,11 +1652,13 @@ function RiskProgress({ value, color }: { value: number; color: string }) {
 // Exibe o resultado dinâmico da API e permite gravá-lo no histórico do usuário.
 function ResultScreen({
   navigate,
+  analysisType,
   message,
   result,
   userId,
 }: {
   navigate: Navigate;
+  analysisType: AnalysisType;
   message: string;
   result: RiskAnalysis;
   userId?: string;
@@ -1271,13 +1677,19 @@ function ResultScreen({
     setSaving(true);
     try {
       const cleanMessage = message.trim().replace(/\s+/g, ' ');
+      const fallbackTitle =
+        analysisType === 'image'
+          ? 'Imagem analisada'
+          : analysisType === 'link'
+            ? 'Link analisado'
+            : 'Mensagem analisada';
       await saveAnalysis(userId, {
-        title: cleanMessage ? cleanMessage.slice(0, 44) : 'Mensagem analisada',
+        title: cleanMessage ? cleanMessage.slice(0, 44) : fallbackTitle,
         message: message.trim(),
         risk: Math.round(Math.max(0, Math.min(100, result.riskScore))),
         level: presentation.title,
         tone: presentation.tone,
-        analysisType: 'message',
+        analysisType,
         warnings: result.warnings.slice(0, 8),
         advice: result.advice.slice(0, 1200),
         modelVersion: (result.modelVersion || 'não informada').slice(0, 120),
@@ -1331,8 +1743,34 @@ function ResultScreen({
           </View>
         </Entrance>
 
+        {analysisType !== 'message' ? (
+          <Entrance delay={150}>
+            <View style={styles.resultSourceCard}>
+              <View style={styles.resultSourceTitleRow}>
+                <Ionicons
+                  name={analysisType === 'image' ? 'scan-outline' : 'link-outline'}
+                  size={16}
+                  color={palette.green}
+                />
+                <Text style={styles.resultSourceTitle}>
+                  {analysisType === 'image' ? 'Texto identificado na imagem' : 'Endereço analisado'}
+                </Text>
+              </View>
+              <Text numberOfLines={analysisType === 'image' ? 6 : 3} style={styles.resultSourceText}>
+                {message}
+              </Text>
+            </View>
+          </Entrance>
+        ) : null}
+
         <Entrance delay={180}>
-          <Text style={styles.resultSectionTitle}>Sinais observados na mensagem</Text>
+          <Text style={styles.resultSectionTitle}>
+            {analysisType === 'image'
+              ? 'Sinais observados no texto da imagem'
+              : analysisType === 'link'
+                ? 'Sinais observados no endereço'
+                : 'Sinais observados na mensagem'}
+          </Text>
         </Entrance>
         <View style={styles.warningList}>
           {result.warnings.map((warning, index) => (
@@ -1415,7 +1853,7 @@ function historyToneStyle(tone: AnalysisTone) {
     ? { backgroundColor: palette.redSoft, color: palette.red }
     : tone === 'medium'
       ? { backgroundColor: palette.amberSoft, color: palette.amber }
-      : { backgroundColor: '#E5F7ED', color: palette.greenSuccess };
+      : { backgroundColor: palette.greenSoft, color: palette.greenSuccess };
 }
 
 function normalizeSearch(value: string) {
@@ -1846,7 +2284,17 @@ function accountInitials(user: FirebaseUser | null) {
 }
 
 // Centraliza as operações reais da conta do Firebase e diferencia visitantes de cadastros por e-mail.
-function AccountScreen({ navigate, user }: { navigate: Navigate; user: FirebaseUser | null }) {
+function AccountScreen({
+  navigate,
+  user,
+  themePreference,
+  onChangeTheme,
+}: {
+  navigate: Navigate;
+  user: FirebaseUser | null;
+  themePreference: ThemePreference;
+  onChangeTheme: (theme: ThemePreference) => void;
+}) {
   const [name, setName] = useState(user?.displayName || (user?.isAnonymous ? 'Visitante' : ''));
   const [draftName, setDraftName] = useState(name);
   const [editingName, setEditingName] = useState(false);
@@ -2203,7 +2651,36 @@ function AccountScreen({ navigate, user }: { navigate: Navigate; user: FirebaseU
           </View>
         </Entrance>
 
-        <Entrance delay={220}>
+        <Entrance delay={190}>
+          <View style={styles.accountSectionCard}>
+            <Text style={styles.accountSectionTitle}>Aparência</Text>
+            <Text style={styles.themeDescription}>
+              Escolha como o Detector de Golpes aparece neste aparelho.
+            </Text>
+            <View accessibilityRole="radiogroup" style={styles.themeOptions}>
+              <ThemeOption
+                icon="phone-portrait-outline"
+                label="Sistema"
+                onPress={() => onChangeTheme('system')}
+                selected={themePreference === 'system'}
+              />
+              <ThemeOption
+                icon="sunny-outline"
+                label="Claro"
+                onPress={() => onChangeTheme('light')}
+                selected={themePreference === 'light'}
+              />
+              <ThemeOption
+                icon="moon-outline"
+                label="Escuro"
+                onPress={() => onChangeTheme('dark')}
+                selected={themePreference === 'dark'}
+              />
+            </View>
+          </View>
+        </Entrance>
+
+        <Entrance delay={230}>
           <View style={styles.accountSectionCard}>
             <Text style={styles.accountSectionTitle}>Acesso e segurança</Text>
             {!isGuest ? (
@@ -2229,12 +2706,12 @@ function AccountScreen({ navigate, user }: { navigate: Navigate; user: FirebaseU
         </Entrance>
 
         {feedback ? (
-          <Entrance delay={250}>
+          <Entrance delay={260}>
             <AuthFeedback message={feedback.message} tone={feedback.tone} />
           </Entrance>
         ) : null}
 
-        <Entrance delay={290}>
+        <Entrance delay={300}>
           <View style={styles.accountDangerCard}>
             <Text style={styles.accountDangerTitle}>Excluir conta</Text>
             <Text style={styles.accountDangerDescription}>
@@ -2302,6 +2779,35 @@ function AccountScreen({ navigate, user }: { navigate: Navigate; user: FirebaseU
   );
 }
 
+function ThemeOption({
+  icon,
+  label,
+  selected,
+  onPress,
+}: {
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <MotionPressable
+      accessibilityLabel={`Tema ${label}`}
+      accessibilityRole="radio"
+      accessibilityState={{ checked: selected }}
+      onPress={onPress}
+      style={[styles.themeOption, selected && styles.themeOptionSelected]}>
+      <View style={[styles.themeOptionIcon, selected && styles.themeOptionIconSelected]}>
+        <Ionicons name={icon} size={18} color={selected ? palette.green : palette.muted} />
+      </View>
+      <Text style={[styles.themeOptionText, selected && styles.themeOptionTextSelected]}>{label}</Text>
+      <View style={[styles.themeRadio, selected && styles.themeRadioSelected]}>
+        {selected ? <View style={styles.themeRadioDot} /> : null}
+      </View>
+    </MotionPressable>
+  );
+}
+
 function AccountActionRow({
   label,
   description,
@@ -2334,8 +2840,9 @@ function AccountActionRow({
   );
 }
 
-// Estilos do protótipo mobile: espaçamentos, tipografia, cartões, estados e sombras por plataforma.
-const styles = StyleSheet.create({
+// Gera uma única folha de estilos a partir da paleta ativa.
+function createAppStyles(palette: AppPalette) {
+  return StyleSheet.create({
   screenTransition: {
     flex: 1,
   },
@@ -2349,7 +2856,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#DDE3EC',
+    backgroundColor: palette.stage,
   },
   phoneFrame: {
     position: 'relative',
@@ -2534,7 +3041,7 @@ const styles = StyleSheet.create({
   inputMockFocused: {
     borderWidth: 1.5,
     borderColor: palette.blue,
-    backgroundColor: '#FBFCFF',
+    backgroundColor: palette.input,
     ...Platform.select({
       web: { boxShadow: '0px 0px 0px 3px rgba(37, 73, 230, 0.10)' },
       default: {
@@ -2549,7 +3056,7 @@ const styles = StyleSheet.create({
   inputMockError: {
     borderWidth: 1.5,
     borderColor: palette.red,
-    backgroundColor: '#FFF9F9',
+    backgroundColor: palette.dangerSurface,
   },
   textInput: {
     flex: 1,
@@ -2666,8 +3173,8 @@ const styles = StyleSheet.create({
     gap: 8,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#F2CCCC',
-    backgroundColor: '#FFF5F5',
+    borderColor: palette.dangerBorder,
+    backgroundColor: palette.dangerSurface,
   },
   authFeedbackText: {
     flex: 1,
@@ -2677,8 +3184,8 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   authFeedbackSuccess: {
-    borderColor: '#CDE9D9',
-    backgroundColor: '#F0FAF4',
+    borderColor: palette.successBorder,
+    backgroundColor: palette.successSurface,
   },
   authFeedbackTextSuccess: {
     color: palette.greenSuccess,
@@ -2691,14 +3198,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 9,
     borderRadius: 999,
-    backgroundColor: '#EBF8F0',
+    backgroundColor: palette.greenSoft,
   },
   privacyDot: {
     width: 8,
     height: 8,
   },
   privacyBadgeText: {
-    color: '#0E9261',
+    color: palette.greenSuccess,
     fontSize: 11,
     lineHeight: 15,
     fontWeight: '500',
@@ -2754,7 +3261,7 @@ const styles = StyleSheet.create({
     alignItems: 'stretch',
     backgroundColor: palette.surface,
     borderTopWidth: 1,
-    borderTopColor: '#E9EDF3',
+    borderTopColor: palette.divider,
     ...Platform.select({
       web: { boxShadow: '0px -8px 24px rgba(15, 23, 41, 0.06)' },
       default: {
@@ -2859,7 +3366,7 @@ const styles = StyleSheet.create({
   heroDescription: {
     marginTop: 8,
     maxWidth: 286,
-    color: '#E5F7F2',
+    color: palette.heroMuted,
     fontSize: 14,
     lineHeight: 17,
   },
@@ -2961,7 +3468,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: palette.amberSoft,
     borderWidth: 1,
-    borderColor: '#F7E7B8',
+    borderColor: palette.warningBorder,
   },
   tipLabel: {
     color: palette.amber,
@@ -3003,6 +3510,48 @@ const styles = StyleSheet.create({
     color: palette.muted,
     fontSize: 13,
     lineHeight: 16,
+  },
+  analysisModeTabs: {
+    height: 48,
+    marginTop: 20,
+    padding: 4,
+    flexDirection: 'row',
+    gap: 4,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: palette.border,
+    backgroundColor: palette.surfaceRaised,
+  },
+  analysisModeTab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    borderRadius: 12,
+  },
+  analysisModeTabSelected: {
+    backgroundColor: palette.surface,
+    ...Platform.select({
+      web: { boxShadow: '0px 3px 9px rgba(15, 23, 41, 0.08)' },
+      default: {
+        shadowColor: palette.shadow,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+        elevation: 2,
+      },
+    }),
+  },
+  analysisModeTabText: {
+    color: palette.muted,
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: '600',
+  },
+  analysisModeTabTextSelected: {
+    color: palette.green,
+    fontWeight: '700',
   },
   fieldTitle: {
     marginTop: 23,
@@ -3076,6 +3625,157 @@ const styles = StyleSheet.create({
     color: palette.green,
     fontWeight: '600',
   },
+  linkInputBox: {
+    height: 58,
+    marginTop: 12,
+    paddingHorizontal: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: palette.border,
+    backgroundColor: palette.surface,
+  },
+  linkInput: {
+    flex: 1,
+    height: 54,
+    padding: 0,
+    color: palette.text,
+    fontSize: 13,
+    lineHeight: 17,
+    ...Platform.select({
+      web: { outlineColor: 'transparent', outlineWidth: 0 },
+      default: {},
+    }),
+  },
+  linkHint: {
+    marginTop: 9,
+    color: palette.muted,
+    fontSize: 10,
+    lineHeight: 14,
+  },
+  imageUploadCard: {
+    minHeight: 254,
+    marginTop: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: palette.successBorder,
+    backgroundColor: palette.surface,
+  },
+  imageUploadIcon: {
+    width: 58,
+    height: 58,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 19,
+    backgroundColor: palette.greenSoft,
+  },
+  imageUploadTitle: {
+    marginTop: 14,
+    color: palette.text,
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: '700',
+  },
+  imageUploadDescription: {
+    maxWidth: 270,
+    marginTop: 7,
+    color: palette.muted,
+    fontSize: 11,
+    lineHeight: 15,
+    textAlign: 'center',
+  },
+  imagePickerButtons: {
+    width: '100%',
+    marginTop: 18,
+    flexDirection: 'row',
+    gap: 9,
+  },
+  imagePrimaryButton: {
+    flex: 1,
+    height: 42,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    borderRadius: 13,
+    backgroundColor: palette.green,
+  },
+  imagePrimaryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: '700',
+  },
+  imageSecondaryButton: {
+    flex: 1,
+    height: 42,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: palette.successBorder,
+    backgroundColor: palette.greenSoft,
+  },
+  imageSecondaryButtonText: {
+    color: palette.green,
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: '700',
+  },
+  selectedImageCard: {
+    marginTop: 12,
+    padding: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: palette.border,
+    backgroundColor: palette.surface,
+  },
+  analysisImagePreview: {
+    width: '100%',
+    height: 230,
+    borderRadius: 14,
+    backgroundColor: palette.surfaceRaised,
+  },
+  selectedImageBadge: {
+    minHeight: 34,
+    marginTop: 9,
+    paddingHorizontal: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderRadius: 11,
+    backgroundColor: palette.successSurface,
+  },
+  selectedImageBadgeText: {
+    color: palette.greenSuccess,
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: '600',
+  },
+  imageActionRow: {
+    marginTop: 9,
+    flexDirection: 'row',
+    gap: 8,
+  },
+  imageRemoveButton: {
+    width: 42,
+    height: 42,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: palette.dangerBorder,
+    backgroundColor: palette.dangerSurface,
+  },
   privacyCard: {
     height: 78,
     marginTop: 22,
@@ -3085,7 +3785,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     backgroundColor: palette.greenSoft,
     borderWidth: 1,
-    borderColor: '#D4ECE5',
+    borderColor: palette.successBorder,
   },
   privacyTitleRow: {
     flexDirection: 'row',
@@ -3172,7 +3872,7 @@ const styles = StyleSheet.create({
     borderRadius: 101,
     backgroundColor: palette.greenSoft,
     borderWidth: 1,
-    borderColor: '#CDE9E1',
+    borderColor: palette.successBorder,
   },
   processingInnerCircle: {
     width: 138,
@@ -3253,7 +3953,7 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     backgroundColor: palette.redSoft,
     borderWidth: 1,
-    borderColor: '#F4D6D6',
+    borderColor: palette.dangerBorder,
     ...Platform.select({
       web: { boxShadow: '0px 10px 26px rgba(184, 33, 41, 0.10)' },
       default: {
@@ -3310,6 +4010,32 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: palette.red,
     transformOrigin: 'left center',
+  },
+  resultSourceCard: {
+    marginTop: 18,
+    paddingHorizontal: 15,
+    paddingVertical: 13,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: palette.border,
+    backgroundColor: palette.surface,
+  },
+  resultSourceTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+  },
+  resultSourceTitle: {
+    color: palette.text,
+    fontSize: 12,
+    lineHeight: 15,
+    fontWeight: '700',
+  },
+  resultSourceText: {
+    marginTop: 9,
+    color: palette.muted,
+    fontSize: 11,
+    lineHeight: 15,
   },
   resultSectionTitle: {
     marginTop: 28,
@@ -3373,7 +4099,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     backgroundColor: palette.greenSoft,
     borderWidth: 1,
-    borderColor: '#D4ECE5',
+    borderColor: palette.successBorder,
   },
   adviceTitleRow: {
     flexDirection: 'row',
@@ -3432,8 +4158,8 @@ const styles = StyleSheet.create({
     gap: 7,
     borderRadius: 13,
     borderWidth: 1,
-    borderColor: '#F2CCCC',
-    backgroundColor: '#FFF5F5',
+    borderColor: palette.dangerBorder,
+    backgroundColor: palette.dangerSurface,
   },
   saveFeedbackText: {
     flex: 1,
@@ -3753,8 +4479,8 @@ const styles = StyleSheet.create({
     gap: 8,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#F2CCCC',
-    backgroundColor: '#FFF8F8',
+    borderColor: palette.dangerBorder,
+    backgroundColor: palette.dangerSurface,
   },
   deleteHistoryButtonText: {
     color: palette.red,
@@ -3767,8 +4493,8 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#F2CCCC',
-    backgroundColor: '#FFF8F8',
+    borderColor: palette.dangerBorder,
+    backgroundColor: palette.dangerSurface,
   },
   deleteConfirmTitle: {
     color: palette.red,
@@ -3992,7 +4718,7 @@ const styles = StyleSheet.create({
   },
   accountEmail: {
     marginTop: 4,
-    color: '#D9EEE8',
+    color: palette.heroMuted,
     fontSize: 11,
     lineHeight: 14,
   },
@@ -4005,7 +4731,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 5,
     borderRadius: 12,
-    backgroundColor: '#E5F7ED',
+    backgroundColor: palette.greenSoft,
   },
   accountTypeBadgeGuest: {
     backgroundColor: palette.amberSoft,
@@ -4034,6 +4760,70 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 17,
     fontWeight: '700',
+  },
+  themeDescription: {
+    marginBottom: 12,
+    color: palette.muted,
+    fontSize: 10,
+    lineHeight: 15,
+  },
+  themeOptions: {
+    gap: 8,
+  },
+  themeOption: {
+    minHeight: 50,
+    paddingHorizontal: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: palette.border,
+    backgroundColor: palette.surfaceRaised,
+  },
+  themeOptionSelected: {
+    borderColor: palette.green,
+    backgroundColor: palette.greenSoft,
+  },
+  themeOptionIcon: {
+    width: 31,
+    height: 31,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 10,
+    backgroundColor: palette.surface,
+  },
+  themeOptionIconSelected: {
+    backgroundColor: palette.surface,
+  },
+  themeOptionText: {
+    flex: 1,
+    color: palette.muted,
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: '600',
+  },
+  themeOptionTextSelected: {
+    color: palette.text,
+    fontWeight: '700',
+  },
+  themeRadio: {
+    width: 18,
+    height: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 9,
+    borderWidth: 1.5,
+    borderColor: palette.border,
+  },
+  themeRadioSelected: {
+    borderColor: palette.green,
+  },
+  themeRadioDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: palette.green,
   },
   accountActionRow: {
     minHeight: 58,
@@ -4070,7 +4860,7 @@ const styles = StyleSheet.create({
   },
   accountRowDivider: {
     height: 1,
-    backgroundColor: '#EDF0F4',
+    backgroundColor: palette.divider,
   },
   removePhotoButton: {
     minHeight: 32,
@@ -4158,7 +4948,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     borderColor: palette.border,
-    backgroundColor: '#FBFCFD',
+    backgroundColor: palette.surfaceRaised,
     color: palette.text,
     fontSize: 12,
     lineHeight: 16,
@@ -4208,8 +4998,8 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     borderRadius: 19,
     borderWidth: 1,
-    borderColor: '#F2CCCC',
-    backgroundColor: '#FFF9F9',
+    borderColor: palette.dangerBorder,
+    backgroundColor: palette.dangerSurface,
   },
   accountDangerTitle: {
     color: palette.red,
@@ -4232,7 +5022,7 @@ const styles = StyleSheet.create({
     gap: 7,
     borderRadius: 13,
     borderWidth: 1,
-    borderColor: '#F2CCCC',
+    borderColor: palette.dangerBorder,
     backgroundColor: palette.surface,
   },
   accountDangerButtonText: {
@@ -4270,4 +5060,15 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.72,
   },
-});
+  });
+}
+
+let isDarkTheme = false;
+let styles = createAppStyles(palette);
+
+function applyAppTheme(useDarkTheme: boolean) {
+  isDarkTheme = useDarkTheme;
+  palette = useDarkTheme ? darkPalette : lightPalette;
+  riskPresentation = createRiskPresentation(palette);
+  styles = createAppStyles(palette);
+}

@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "trabalhodofiori",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
@@ -32,6 +32,7 @@
         "expo-image-picker",
         {
           "photosPermission": "Permita que o Detector de Golpes acesse suas fotos para escolher uma imagem de perfil.",
+          "cameraPermission": "Permita que o Detector de Golpes use a câmera para fotografar mensagens suspeitas.",
           "microphonePermission": false
         }
       ],
