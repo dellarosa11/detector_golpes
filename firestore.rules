@@ -2,11 +2,64 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // O histórico pertence ao UID da sessão. Mesmo conhecendo outro caminho,
-    // um usuário não pode ler nem modificar análises de outra conta.
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    function isValidAnalysis(data) {
+      return data.keys().hasAll([
+          'title', 'message', 'risk', 'level', 'tone', 'analysisType',
+          'warnings', 'advice', 'modelVersion', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'title', 'message', 'risk', 'level', 'tone', 'analysisType',
+          'warnings', 'advice', 'modelVersion', 'createdAt'
+        ])
+        && data.title is string
+        && data.title.size() > 0
+        && data.title.size() <= 80
+        && data.message is string
+        && data.message.size() > 0
+        && data.message.size() <= 1500
+        && data.risk is number
+        && data.risk >= 0
+        && data.risk <= 100
+        && data.level in ['Baixo', 'Médio', 'Alto']
+        && data.tone in ['low', 'medium', 'high']
+        && data.analysisType in ['message', 'image', 'link']
+        && data.warnings is list
+        && data.warnings.size() <= 8
+        && data.advice is string
+        && data.advice.size() <= 1200
+        && data.modelVersion is string
+        && data.modelVersion.size() > 0
+        && data.modelVersion.size() <= 120
+        && data.createdAt is timestamp;
+    }
+
+    function isValidProfilePhoto(data) {
+      return data.keys().hasAll(['imageData', 'updatedAt'])
+        && data.keys().hasOnly(['imageData', 'updatedAt'])
+        && data.imageData is string
+        && data.imageData.size() > 23
+        && data.imageData.size() <= 200000
+        && data.imageData.matches('^data:image/jpeg;base64,.*$')
+        && data.updatedAt is timestamp;
+    }
+
+    // Cada pessoa lê e apaga apenas o próprio histórico. Novos registros também
+    // precisam respeitar o formato e os limites esperados pelo aplicativo.
     match /users/{userId}/analyses/{analysisId} {
-      allow read, create, update, delete: if request.auth != null
-        && request.auth.uid == userId;
+      allow read, delete: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidAnalysis(request.resource.data);
+      allow update: if false;
+    }
+
+    // A foto já chega recortada e comprimida pelo aplicativo. Ela fica em um
+    // documento separado para não aumentar o custo das leituras do histórico.
+    match /users/{userId}/profile/avatar {
+      allow read, delete: if isOwner(userId);
+      allow create, update: if isOwner(userId) && isValidProfilePhoto(request.resource.data);
     }
   }
 }

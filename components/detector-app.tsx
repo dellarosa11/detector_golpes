@@ -1,10 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
+import * as ImagePicker from 'expo-image-picker';
 import { StatusBar } from 'expo-status-bar';
 import type { User as FirebaseUser } from 'firebase/auth';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
   Platform,
   Pressable,
   PressableProps,
@@ -35,13 +38,25 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { isFirebaseConfigured } from '@/lib/firebase';
 import {
   createAccount,
+  deleteAccountAndHistory,
+  deleteAnalysis,
   firebaseErrorMessage,
+  getAccountPhoto,
   loginAsGuest,
   loginWithEmail,
+  logout,
   observeAuth,
+  reloadCurrentAccount,
+  requestPasswordReset,
+  removeAccountPhoto,
   saveAnalysis,
+  sendAccountVerification,
   StoredAnalysis,
   subscribeToAnalyses,
+  updateAccountName,
+  updateAccountPhoto,
+  type AnalysisTone,
+  type AnalysisType,
 } from '@/lib/firebase-data';
 import {
   classifyRisk,
@@ -88,7 +103,8 @@ type ScreenName =
   | 'processing'
   | 'result'
   | 'history'
-  | 'learn';
+  | 'learn'
+  | 'account';
 
 type Navigate = (screen: ScreenName) => void;
 
@@ -236,6 +252,10 @@ export default function DetectorApp() {
           setScreen((currentScreen) =>
             currentScreen === 'login' || currentScreen === 'signup' ? 'home' : currentScreen
           );
+        } else {
+          setScreen((currentScreen) =>
+            currentScreen === 'login' || currentScreen === 'signup' ? currentScreen : 'login'
+          );
         }
       });
     } catch {
@@ -325,6 +345,9 @@ export default function DetectorApp() {
       break;
     case 'learn':
       content = <LearnScreen navigate={setScreen} />;
+      break;
+    case 'account':
+      content = <AccountScreen navigate={setScreen} user={user} />;
       break;
     case 'login':
     default:
@@ -419,22 +442,19 @@ function FormField({
   error,
 }: FormFieldProps) {
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [focused, setFocused] = useState(false);
 
   return (
     <View style={styles.formField}>
-      <Text style={[styles.formLabel, focused && styles.formLabelFocused, error && styles.formLabelError]}>
+      <Text style={[styles.formLabel, error && styles.formLabelError]}>
         {label}
       </Text>
-      <View style={[styles.inputMock, focused && styles.inputMockFocused, error && styles.inputMockError]}>
+      <View style={[styles.inputMock, error && styles.inputMockError]}>
         <TextInput
           accessibilityLabel={label}
           autoCapitalize={autoCapitalize}
           autoCorrect={false}
           keyboardType={keyboardType}
-          onBlur={() => setFocused(false)}
           onChangeText={onChangeText}
-          onFocus={() => setFocused(true)}
           placeholder={placeholder}
           placeholderTextColor={palette.authMuted}
           secureTextEntry={secure && !passwordVisible}
@@ -521,13 +541,27 @@ function AuthButton({
   );
 }
 
-function AuthFeedback({ message }: { message?: string }) {
+function AuthFeedback({
+  message,
+  tone = 'error',
+}: {
+  message?: string;
+  tone?: 'error' | 'success';
+}) {
   if (!message) return null;
 
+  const success = tone === 'success';
+
   return (
-    <View style={styles.authFeedback}>
-      <Ionicons name="alert-circle-outline" size={17} color={palette.red} />
-      <Text accessibilityLiveRegion="polite" style={styles.authFeedbackText}>
+    <View style={[styles.authFeedback, success && styles.authFeedbackSuccess]}>
+      <Ionicons
+        name={success ? 'checkmark-circle-outline' : 'alert-circle-outline'}
+        size={17}
+        color={success ? palette.greenSuccess : palette.red}
+      />
+      <Text
+        accessibilityLiveRegion="polite"
+        style={[styles.authFeedbackText, success && styles.authFeedbackTextSuccess]}>
         {message}
       </Text>
     </View>
@@ -540,7 +574,8 @@ function LoginScreen({ navigate }: { navigate: Navigate }) {
   const [password, setPassword] = useState('');
   const [showErrors, setShowErrors] = useState(false);
   const [firebaseError, setFirebaseError] = useState<string>();
-  const [busyAction, setBusyAction] = useState<'login' | 'guest'>();
+  const [authNotice, setAuthNotice] = useState<string>();
+  const [busyAction, setBusyAction] = useState<'login' | 'guest' | 'reset'>();
 
   const errors = {
     email: emailError(email),
@@ -550,6 +585,7 @@ function LoginScreen({ navigate }: { navigate: Navigate }) {
   const submitLogin = async () => {
     setShowErrors(true);
     setFirebaseError(undefined);
+    setAuthNotice(undefined);
     if (errors.email || errors.password) return;
 
     setBusyAction('login');
@@ -565,6 +601,7 @@ function LoginScreen({ navigate }: { navigate: Navigate }) {
 
   const continueAsGuest = async () => {
     setFirebaseError(undefined);
+    setAuthNotice(undefined);
     setBusyAction('guest');
     try {
       await loginAsGuest();
@@ -576,13 +613,37 @@ function LoginScreen({ navigate }: { navigate: Navigate }) {
     }
   };
 
+  const resetPassword = async () => {
+    setFirebaseError(undefined);
+    setAuthNotice(undefined);
+    if (errors.email) {
+      setFirebaseError(errors.email);
+      return;
+    }
+
+    setBusyAction('reset');
+    try {
+      await requestPasswordReset(email);
+      setAuthNotice('Enviamos as instruções de redefinição para o seu e-mail.');
+    } catch (error) {
+      setFirebaseError(firebaseErrorMessage(error));
+    } finally {
+      setBusyAction(undefined);
+    }
+  };
+
   return (
     <PhoneFrame auth>
-      <ScrollView
-        contentContainerStyle={styles.authContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-        bounces={false}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.keyboardView}>
+        <ScrollView
+          bounces={false}
+          contentContainerStyle={styles.authContent}
+          keyboardDismissMode="none"
+          keyboardShouldPersistTaps="always"
+          removeClippedSubviews={false}
+          showsVerticalScrollIndicator={false}>
         <BrandHeader
           title="Entre na sua conta"
           description="Analise mensagens suspeitas e acompanhe seu histórico de forma simples."
@@ -597,6 +658,7 @@ function LoginScreen({ navigate }: { navigate: Navigate }) {
               onChangeText={(value) => {
                 setEmail(value);
                 setFirebaseError(undefined);
+                setAuthNotice(undefined);
               }}
               keyboardType="email-address"
               autoCapitalize="none"
@@ -610,6 +672,7 @@ function LoginScreen({ navigate }: { navigate: Navigate }) {
               onChangeText={(value) => {
                 setPassword(value);
                 setFirebaseError(undefined);
+                setAuthNotice(undefined);
               }}
               secure
               autoCapitalize="none"
@@ -618,9 +681,18 @@ function LoginScreen({ navigate }: { navigate: Navigate }) {
             />
             <View style={styles.forgotRow}>
               <Text style={styles.forgotMuted}>Lembrar de mim</Text>
-              <Text style={styles.forgotLink}>Esqueci minha senha</Text>
+              <Pressable
+                accessibilityRole="button"
+                disabled={Boolean(busyAction)}
+                hitSlop={8}
+                onPress={resetPassword}>
+                <Text style={styles.forgotLink}>
+                  {busyAction === 'reset' ? 'Enviando…' : 'Esqueci minha senha'}
+                </Text>
+              </Pressable>
             </View>
             <AuthFeedback message={firebaseError} />
+            <AuthFeedback message={authNotice} tone="success" />
             <AuthButton
               label={busyAction === 'login' ? 'Entrando…' : 'Entrar'}
               disabled={Boolean(busyAction)}
@@ -654,7 +726,8 @@ function LoginScreen({ navigate }: { navigate: Navigate }) {
             </Pressable>
           </View>
         </Entrance>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </PhoneFrame>
   );
 }
@@ -711,11 +784,16 @@ function SignupScreen({ navigate }: { navigate: Navigate }) {
 
   return (
     <PhoneFrame auth>
-      <ScrollView
-        contentContainerStyle={styles.authContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-        bounces={false}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.keyboardView}>
+        <ScrollView
+          bounces={false}
+          contentContainerStyle={styles.authContent}
+          keyboardDismissMode="none"
+          keyboardShouldPersistTaps="always"
+          removeClippedSubviews={false}
+          showsVerticalScrollIndicator={false}>
         <BrandHeader
           title="Crie sua conta"
           description="O cadastro permite salvar análises, acessar seu histórico e receber recursos personalizados."
@@ -805,7 +883,8 @@ function SignupScreen({ navigate }: { navigate: Navigate }) {
             </Pressable>
           </View>
         </Entrance>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </PhoneFrame>
   );
 }
@@ -817,7 +896,7 @@ function AppScreen({
   navigate,
 }: {
   children: React.ReactNode;
-  activeTab?: 'home' | 'history' | 'learn';
+  activeTab?: 'home' | 'history' | 'learn' | 'account';
   navigate?: Navigate;
 }) {
   return (
@@ -828,15 +907,22 @@ function AppScreen({
   );
 }
 
-function BottomNavigation({ active, navigate }: { active: 'home' | 'history' | 'learn'; navigate: Navigate }) {
+function BottomNavigation({
+  active,
+  navigate,
+}: {
+  active: 'home' | 'history' | 'learn' | 'account';
+  navigate: Navigate;
+}) {
   const items: {
-    key: 'home' | 'history' | 'learn';
+    key: 'home' | 'history' | 'learn' | 'account';
     label: string;
     icon: React.ComponentProps<typeof Ionicons>['name'];
   }[] = [
     { key: 'home', label: 'Início', icon: 'home-outline' },
     { key: 'history', label: 'Histórico', icon: 'menu-outline' },
     { key: 'learn', label: 'Aprender', icon: 'help-outline' },
+    { key: 'account', label: 'Conta', icon: 'person-outline' },
   ];
 
   return (
@@ -1188,9 +1274,13 @@ function ResultScreen({
       await saveAnalysis(userId, {
         title: cleanMessage ? cleanMessage.slice(0, 44) : 'Mensagem analisada',
         message: message.trim(),
-        risk: result.riskScore,
+        risk: Math.round(Math.max(0, Math.min(100, result.riskScore))),
         level: presentation.title,
         tone: presentation.tone,
+        analysisType: 'message',
+        warnings: result.warnings.slice(0, 8),
+        advice: result.advice.slice(0, 1200),
+        modelVersion: (result.modelVersion || 'não informada').slice(0, 120),
       });
       navigate('history');
     } catch (error) {
@@ -1311,11 +1401,39 @@ function formatHistoryDate(date: Date | null) {
   return `${day}, ${time}`;
 }
 
-// Assina as atualizações do Firestore e representa carregamento, erro, vazio e lista preenchida.
+const analysisTypePresentation: Record<
+  AnalysisType,
+  { label: string; icon: React.ComponentProps<typeof Ionicons>['name'] }
+> = {
+  message: { label: 'Mensagem', icon: 'chatbubble-ellipses-outline' },
+  link: { label: 'Link', icon: 'link-outline' },
+  image: { label: 'Imagem', icon: 'image-outline' },
+};
+
+function historyToneStyle(tone: AnalysisTone) {
+  return tone === 'high'
+    ? { backgroundColor: palette.redSoft, color: palette.red }
+    : tone === 'medium'
+      ? { backgroundColor: palette.amberSoft, color: palette.amber }
+      : { backgroundColor: '#E5F7ED', color: palette.greenSuccess };
+}
+
+function normalizeSearch(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('pt-BR');
+}
+
+// Assina as atualizações do Firestore e adiciona busca, filtros e detalhes completos.
 function HistoryScreen({ navigate, userId }: { navigate: Navigate; userId?: string }) {
   const [historyEntries, setHistoryEntries] = useState<StoredAnalysis[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [historyError, setHistoryError] = useState<string>();
+  const [search, setSearch] = useState('');
+  const [riskFilter, setRiskFilter] = useState<'all' | AnalysisTone>('all');
+  const [typeFilter, setTypeFilter] = useState<'all' | AnalysisType>('all');
+  const [selectedEntry, setSelectedEntry] = useState<StoredAnalysis>();
 
   useEffect(() => {
     setHistoryEntries([]);
@@ -1351,16 +1469,80 @@ function HistoryScreen({ navigate, userId }: { navigate: Navigate; userId?: stri
     }
   }, [userId]);
 
+  const filteredEntries = useMemo(() => {
+    const term = normalizeSearch(search.trim());
+    return historyEntries.filter((entry) => {
+      const matchesRisk = riskFilter === 'all' || entry.tone === riskFilter;
+      const matchesType = typeFilter === 'all' || entry.analysisType === typeFilter;
+      const searchableText = normalizeSearch(
+        `${entry.title} ${entry.message} ${entry.level} ${analysisTypePresentation[entry.analysisType].label}`
+      );
+      return matchesRisk && matchesType && (!term || searchableText.includes(term));
+    });
+  }, [historyEntries, riskFilter, search, typeFilter]);
+
+  if (selectedEntry && userId) {
+    return (
+      <HistoryDetailScreen
+        entry={selectedEntry}
+        onBack={() => setSelectedEntry(undefined)}
+        onDeleted={() => setSelectedEntry(undefined)}
+        userId={userId}
+      />
+    );
+  }
+
+  const hasActiveFilters = Boolean(search.trim()) || riskFilter !== 'all' || typeFilter !== 'all';
+
   return (
     <AppScreen activeTab="history" navigate={navigate}>
       <ScrollView
         bounces={false}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.historyContent}>
         <Entrance delay={30}>
           <Text style={styles.pageTitle}>Histórico</Text>
-          <Text style={styles.pageSubtitle}>Suas análises recentes ficam organizadas aqui.</Text>
+          <Text style={styles.pageSubtitle}>Pesquise, filtre e reveja suas análises salvas.</Text>
         </Entrance>
+
+        {!loadingHistory && !historyError && historyEntries.length > 0 ? (
+          <Entrance delay={85}>
+            <View style={styles.historyControls}>
+              <View style={styles.historySearchBox}>
+                <Ionicons name="search-outline" size={18} color={palette.muted} />
+                <TextInput
+                  accessibilityLabel="Pesquisar no histórico"
+                  autoCapitalize="none"
+                  onChangeText={setSearch}
+                  placeholder="Pesquisar mensagem ou título"
+                  placeholderTextColor={palette.muted}
+                  style={styles.historySearchInput}
+                  value={search}
+                />
+                {search ? (
+                  <Pressable accessibilityRole="button" hitSlop={8} onPress={() => setSearch('')}>
+                    <Ionicons name="close-circle" size={18} color={palette.muted} />
+                  </Pressable>
+                ) : null}
+              </View>
+
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.historyFilterRow}>
+                <FilterChip label="Todos os riscos" selected={riskFilter === 'all'} onPress={() => setRiskFilter('all')} />
+                <FilterChip label="Alto" selected={riskFilter === 'high'} onPress={() => setRiskFilter('high')} />
+                <FilterChip label="Médio" selected={riskFilter === 'medium'} onPress={() => setRiskFilter('medium')} />
+                <FilterChip label="Baixo" selected={riskFilter === 'low'} onPress={() => setRiskFilter('low')} />
+              </ScrollView>
+
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.historyFilterRow}>
+                <FilterChip label="Todos os tipos" selected={typeFilter === 'all'} onPress={() => setTypeFilter('all')} />
+                <FilterChip label="Mensagens" selected={typeFilter === 'message'} onPress={() => setTypeFilter('message')} />
+                <FilterChip label="Links" selected={typeFilter === 'link'} onPress={() => setTypeFilter('link')} />
+                <FilterChip label="Imagens" selected={typeFilter === 'image'} onPress={() => setTypeFilter('image')} />
+              </ScrollView>
+            </View>
+          </Entrance>
+        ) : null}
 
         {loadingHistory ? (
           <View style={styles.historyState}>
@@ -1383,17 +1565,34 @@ function HistoryScreen({ navigate, userId }: { navigate: Navigate; userId?: stri
             <Text style={styles.historyStateTitle}>Nenhuma análise salva</Text>
             <Text style={styles.historyStateText}>Seus próximos resultados aparecerão aqui.</Text>
           </View>
+        ) : filteredEntries.length === 0 ? (
+          <View style={styles.historyState}>
+            <View style={styles.historyStateIcon}>
+              <Ionicons name="search-outline" size={23} color={palette.green} />
+            </View>
+            <Text style={styles.historyStateTitle}>Nenhum resultado encontrado</Text>
+            <Text style={styles.historyStateText}>Tente mudar a pesquisa ou limpar os filtros.</Text>
+            {hasActiveFilters ? (
+              <MotionPressable
+                accessibilityRole="button"
+                onPress={() => {
+                  setSearch('');
+                  setRiskFilter('all');
+                  setTypeFilter('all');
+                }}
+                style={styles.clearFiltersButton}>
+                <Text style={styles.clearFiltersText}>Limpar filtros</Text>
+              </MotionPressable>
+            ) : null}
+          </View>
         ) : (
           <View style={styles.historyList}>
-            {historyEntries.map((entry, index) => (
-              <Entrance key={entry.id} delay={110 + index * 70}>
-                <HistoryCard
-                  date={formatHistoryDate(entry.createdAt)}
-                  title={entry.title}
-                  level={entry.level}
-                  risk={`Risco ${entry.risk}%`}
-                  tone={entry.tone}
-                />
+            <Text style={styles.historyCount}>
+              {filteredEntries.length} {filteredEntries.length === 1 ? 'análise' : 'análises'}
+            </Text>
+            {filteredEntries.map((entry, index) => (
+              <Entrance key={entry.id} delay={110 + Math.min(index, 5) * 55}>
+                <HistoryCard entry={entry} onPress={() => setSelectedEntry(entry)} />
               </Entrance>
             ))}
           </View>
@@ -1403,35 +1602,189 @@ function HistoryScreen({ navigate, userId }: { navigate: Navigate; userId?: stri
   );
 }
 
-function HistoryCard({
-  date,
-  title,
-  level,
-  risk,
-  tone,
-}: {
-  date: string;
-  title: string;
-  level: string;
-  risk: string;
-  tone: 'high' | 'medium' | 'low';
-}) {
-  const toneStyle =
-    tone === 'high'
-      ? { backgroundColor: palette.redSoft, color: palette.red }
-      : tone === 'medium'
-        ? { backgroundColor: palette.amberSoft, color: palette.amber }
-        : { backgroundColor: '#E5F7ED', color: palette.greenSuccess };
+function FilterChip({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
+  return (
+    <MotionPressable
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      onPress={onPress}
+      style={[styles.filterChip, selected && styles.filterChipSelected]}>
+      <Text style={[styles.filterChipText, selected && styles.filterChipTextSelected]}>{label}</Text>
+    </MotionPressable>
+  );
+}
+
+function HistoryCard({ entry, onPress }: { entry: StoredAnalysis; onPress: () => void }) {
+  const toneStyle = historyToneStyle(entry.tone);
+  const type = analysisTypePresentation[entry.analysisType];
 
   return (
-    <View style={styles.historyCard}>
-      <Text style={styles.historyDate}>{date}</Text>
-      <Text numberOfLines={1} style={styles.historyTitle}>{title}</Text>
-      <Text style={[styles.historyRisk, { color: toneStyle.color }]}>{risk}</Text>
-      <View style={[styles.riskBadge, { backgroundColor: toneStyle.backgroundColor }]}>
-        <Text style={[styles.riskBadgeText, { color: toneStyle.color }]}>{level}</Text>
+    <MotionPressable
+      accessibilityRole="button"
+      accessibilityLabel={`Abrir análise ${entry.title}`}
+      onPress={onPress}
+      style={styles.historyCard}>
+      <View style={styles.historyCardTopRow}>
+        <View style={styles.historyTypeRow}>
+          <Ionicons name={type.icon} size={13} color={palette.muted} />
+          <Text style={styles.historyDate}>{type.label} · {formatHistoryDate(entry.createdAt)}</Text>
+        </View>
+        <View style={[styles.riskBadge, { backgroundColor: toneStyle.backgroundColor }]}>
+          <Text style={[styles.riskBadgeText, { color: toneStyle.color }]}>{entry.level}</Text>
+        </View>
       </View>
-    </View>
+      <View style={styles.historyCardBody}>
+        <View style={styles.historyCardText}>
+          <Text numberOfLines={1} style={styles.historyTitle}>{entry.title}</Text>
+          <Text style={[styles.historyRisk, { color: toneStyle.color }]}>Risco {entry.risk}%</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={palette.muted} />
+      </View>
+    </MotionPressable>
+  );
+}
+
+function HistoryDetailScreen({
+  entry,
+  userId,
+  onBack,
+  onDeleted,
+}: {
+  entry: StoredAnalysis;
+  userId: string;
+  onBack: () => void;
+  onDeleted: () => void;
+}) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string>();
+  const toneStyle = historyToneStyle(entry.tone);
+  const type = analysisTypePresentation[entry.analysisType];
+
+  const removeEntry = async () => {
+    setDeleting(true);
+    setDeleteError(undefined);
+    try {
+      await deleteAnalysis(userId, entry.id);
+      onDeleted();
+    } catch (error) {
+      setDeleteError(firebaseErrorMessage(error));
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <AppScreen>
+      <ScrollView
+        bounces={false}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.historyDetailContent}>
+        <Entrance delay={20}>
+          <BackHeader title="Detalhes da análise" onBack={onBack} />
+        </Entrance>
+
+        <Entrance delay={80}>
+          <View style={[styles.historyDetailRiskCard, { backgroundColor: toneStyle.backgroundColor }]}>
+            <View style={styles.historyDetailRiskText}>
+              <Text style={[styles.historyDetailRiskLabel, { color: toneStyle.color }]}>RISCO {entry.level.toUpperCase()}</Text>
+              <Text numberOfLines={2} style={styles.historyDetailTitle}>{entry.title}</Text>
+            </View>
+            <Text style={[styles.historyDetailScore, { color: toneStyle.color }]}>{entry.risk}%</Text>
+          </View>
+        </Entrance>
+
+        <Entrance delay={140}>
+          <View style={styles.historyMetadataCard}>
+            <View style={styles.historyMetadataItem}>
+              <Ionicons name={type.icon} size={17} color={palette.green} />
+              <View>
+                <Text style={styles.historyMetadataLabel}>Tipo</Text>
+                <Text style={styles.historyMetadataValue}>{type.label}</Text>
+              </View>
+            </View>
+            <View style={styles.historyMetadataDivider} />
+            <View style={styles.historyMetadataItem}>
+              <Ionicons name="calendar-outline" size={17} color={palette.green} />
+              <View>
+                <Text style={styles.historyMetadataLabel}>Salva em</Text>
+                <Text style={styles.historyMetadataValue}>{formatHistoryDate(entry.createdAt)}</Text>
+              </View>
+            </View>
+          </View>
+        </Entrance>
+
+        <Entrance delay={200}>
+          <Text style={styles.historyDetailSectionTitle}>Conteúdo analisado</Text>
+          <View style={styles.historyMessageCard}>
+            <Text selectable style={styles.historyMessageText}>
+              {entry.message || 'O conteúdo original não está disponível neste registro.'}
+            </Text>
+          </View>
+        </Entrance>
+
+        <Entrance delay={260}>
+          <Text style={styles.historyDetailSectionTitle}>Sinais encontrados</Text>
+          <View style={styles.historyDetailWarnings}>
+            {(entry.warnings.length > 0 ? entry.warnings : ['Este registro antigo não possui sinais detalhados.']).map((warning) => (
+              <View key={warning} style={styles.historyDetailWarningRow}>
+                <View style={styles.warningIconBox}>
+                  <Text style={styles.warningIcon}>!</Text>
+                </View>
+                <Text style={styles.warningText}>{warning}</Text>
+              </View>
+            ))}
+          </View>
+        </Entrance>
+
+        <Entrance delay={320}>
+          <View style={styles.adviceCard}>
+            <View style={styles.adviceTitleRow}>
+              <Ionicons name="checkmark-circle-outline" size={17} color={palette.green} />
+              <Text style={styles.adviceTitle}>Recomendação</Text>
+            </View>
+            <Text style={styles.adviceText}>
+              {entry.advice || 'Analise novamente a mensagem para receber uma recomendação detalhada.'}
+            </Text>
+            <Text style={styles.historyModelText}>Modelo: {entry.modelVersion}</Text>
+          </View>
+        </Entrance>
+
+        <Entrance delay={380}>
+          {deleteError ? <AuthFeedback message={deleteError} /> : null}
+          {confirmDelete ? (
+            <View style={styles.deleteConfirmCard}>
+              <Text style={styles.deleteConfirmTitle}>Excluir esta análise?</Text>
+              <Text style={styles.deleteConfirmText}>Ela será removida do seu histórico e não poderá ser recuperada.</Text>
+              <View style={styles.deleteConfirmActions}>
+                <MotionPressable
+                  accessibilityRole="button"
+                  disabled={deleting}
+                  onPress={() => setConfirmDelete(false)}
+                  style={styles.cancelDeleteButton}>
+                  <Text style={styles.cancelDeleteText}>Cancelar</Text>
+                </MotionPressable>
+                <MotionPressable
+                  accessibilityRole="button"
+                  disabled={deleting}
+                  onPress={removeEntry}
+                  style={[styles.confirmDeleteButton, deleting && styles.buttonDisabled]}>
+                  <Text style={styles.confirmDeleteText}>{deleting ? 'Excluindo…' : 'Sim, excluir'}</Text>
+                </MotionPressable>
+              </View>
+            </View>
+          ) : (
+            <MotionPressable
+              accessibilityRole="button"
+              onPress={() => setConfirmDelete(true)}
+              style={styles.deleteHistoryButton}>
+              <Ionicons name="trash-outline" size={17} color={palette.red} />
+              <Text style={styles.deleteHistoryButtonText}>Excluir do histórico</Text>
+            </MotionPressable>
+          )}
+        </Entrance>
+      </ScrollView>
+    </AppScreen>
   );
 }
 
@@ -1483,6 +1836,504 @@ function LearnScreen({ navigate }: { navigate: Navigate }) {
   );
 }
 
+function accountInitials(user: FirebaseUser | null) {
+  const source = user?.displayName?.trim() || user?.email?.split('@')[0] || 'Visitante';
+  return source
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join('');
+}
+
+// Centraliza as operações reais da conta do Firebase e diferencia visitantes de cadastros por e-mail.
+function AccountScreen({ navigate, user }: { navigate: Navigate; user: FirebaseUser | null }) {
+  const [name, setName] = useState(user?.displayName || (user?.isAnonymous ? 'Visitante' : ''));
+  const [draftName, setDraftName] = useState(name);
+  const [editingName, setEditingName] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState('');
+  const [loadingPhoto, setLoadingPhoto] = useState(true);
+  const [emailVerified, setEmailVerified] = useState(Boolean(user?.emailVerified));
+  const [busyAction, setBusyAction] = useState<
+    'photo' | 'removePhoto' | 'name' | 'verification' | 'refresh' | 'reset' | 'logout' | 'delete'
+  >();
+  const [feedback, setFeedback] = useState<{ message: string; tone: 'error' | 'success' }>();
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+
+  const isGuest = Boolean(user?.isAnonymous);
+
+  useEffect(() => {
+    let active = true;
+    if (!user) {
+      setLoadingPhoto(false);
+      return;
+    }
+
+    setLoadingPhoto(true);
+    getAccountPhoto()
+      .then((storedPhoto) => {
+        if (active) setPhotoUrl(storedPhoto);
+      })
+      .catch((error) => {
+        if (active) setFeedback({ message: firebaseErrorMessage(error), tone: 'error' });
+      })
+      .finally(() => {
+        if (active) setLoadingPhoto(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
+  const runAccountAction = async (
+    action: NonNullable<typeof busyAction>,
+    operation: () => Promise<void>
+  ) => {
+    setBusyAction(action);
+    setFeedback(undefined);
+    try {
+      await operation();
+    } catch (error) {
+      setFeedback({ message: firebaseErrorMessage(error), tone: 'error' });
+    } finally {
+      setBusyAction(undefined);
+    }
+  };
+
+  const saveName = () => {
+    const cleanName = draftName.trim();
+    if (cleanName.length < 3) {
+      setFeedback({ message: 'O nome precisa ter pelo menos 3 caracteres.', tone: 'error' });
+      return;
+    }
+
+    void runAccountAction('name', async () => {
+      await updateAccountName(cleanName);
+      setName(cleanName);
+      setEditingName(false);
+      setFeedback({ message: 'Nome atualizado com sucesso.', tone: 'success' });
+    });
+  };
+
+  const chooseProfilePhoto = async () => {
+    setFeedback(undefined);
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        setFeedback({
+          message: 'Permita o acesso às fotos do aparelho para escolher uma imagem de perfil.',
+          tone: 'error',
+        });
+        return;
+      }
+
+      const selection = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.9,
+      });
+
+      if (selection.canceled || !selection.assets[0]) return;
+      const selectedPhoto = selection.assets[0];
+      let processedPhoto = await manipulateAsync(
+        selectedPhoto.uri,
+        [{ resize: { width: 256, height: 256 } }],
+        { base64: true, compress: 0.68, format: SaveFormat.JPEG }
+      );
+      let imageData = `data:image/jpeg;base64,${processedPhoto.base64 || ''}`;
+
+      // Uma segunda compressão cobre imagens muito detalhadas sem ultrapassar
+      // o limite adotado para o documento de perfil no Firestore.
+      if (imageData.length > 200_000) {
+        processedPhoto = await manipulateAsync(
+          selectedPhoto.uri,
+          [{ resize: { width: 256, height: 256 } }],
+          { base64: true, compress: 0.42, format: SaveFormat.JPEG }
+        );
+        imageData = `data:image/jpeg;base64,${processedPhoto.base64 || ''}`;
+      }
+
+      if (!processedPhoto.base64 || imageData.length > 200_000) {
+        setFeedback({ message: 'Não foi possível reduzir esta foto. Escolha outra imagem.', tone: 'error' });
+        return;
+      }
+
+      void runAccountAction('photo', async () => {
+        const newPhotoUrl = await updateAccountPhoto(imageData);
+        setPhotoUrl(newPhotoUrl);
+        setFeedback({ message: 'Foto de perfil atualizada com sucesso.', tone: 'success' });
+      });
+    } catch {
+      setFeedback({ message: 'Não foi possível abrir ou preparar a imagem escolhida.', tone: 'error' });
+    }
+  };
+
+  const deleteProfilePhoto = () => {
+    void runAccountAction('removePhoto', async () => {
+      await removeAccountPhoto();
+      setPhotoUrl('');
+      setFeedback({ message: 'Foto de perfil removida.', tone: 'success' });
+    });
+  };
+
+  const sendVerification = () => {
+    void runAccountAction('verification', async () => {
+      await sendAccountVerification();
+      setFeedback({ message: 'Enviamos o link de verificação para o seu e-mail.', tone: 'success' });
+    });
+  };
+
+  const refreshVerification = () => {
+    void runAccountAction('refresh', async () => {
+      const refreshedUser = await reloadCurrentAccount();
+      setEmailVerified(refreshedUser.emailVerified);
+      setFeedback({
+        message: refreshedUser.emailVerified
+          ? 'E-mail verificado com sucesso.'
+          : 'O e-mail ainda não foi verificado. Abra o link recebido e tente novamente.',
+        tone: refreshedUser.emailVerified ? 'success' : 'error',
+      });
+    });
+  };
+
+  const resetAccountPassword = () => {
+    if (!user?.email) return;
+    void runAccountAction('reset', async () => {
+      await requestPasswordReset(user.email!);
+      setFeedback({ message: 'Enviamos as instruções para redefinir sua senha.', tone: 'success' });
+    });
+  };
+
+  const leaveAccount = () => {
+    void runAccountAction('logout', async () => {
+      await logout();
+      navigate('login');
+    });
+  };
+
+  const removeAccount = () => {
+    void runAccountAction('delete', async () => {
+      await deleteAccountAndHistory(isGuest ? undefined : currentPassword);
+      navigate('login');
+    });
+  };
+
+  return (
+    <AppScreen activeTab="account" navigate={navigate}>
+      <ScrollView
+        bounces={false}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.accountContent}>
+        <Entrance delay={30}>
+          <Text style={styles.pageTitle}>Sua conta</Text>
+          <Text style={styles.pageSubtitle}>Gerencie seus dados, acesso e privacidade.</Text>
+        </Entrance>
+
+        <Entrance delay={90}>
+          <View style={styles.accountProfileCard}>
+            <MotionPressable
+              accessibilityRole="button"
+              accessibilityLabel={photoUrl ? 'Trocar foto de perfil' : 'Adicionar foto de perfil'}
+              disabled={Boolean(busyAction)}
+              onPress={chooseProfilePhoto}
+              style={styles.accountAvatarButton}>
+              <View style={styles.accountAvatar}>
+                {photoUrl ? (
+                  <Image
+                    contentFit="cover"
+                    source={{ uri: photoUrl }}
+                    style={styles.accountAvatarImage}
+                    transition={180}
+                  />
+                ) : (
+                  <Text style={styles.accountAvatarText}>{accountInitials(user)}</Text>
+                )}
+              </View>
+              <View style={styles.accountCameraBadge}>
+                {loadingPhoto || busyAction === 'photo' ? (
+                  <ActivityIndicator color={palette.green} size={11} />
+                ) : (
+                  <Ionicons name="camera" size={13} color={palette.green} />
+                )}
+              </View>
+            </MotionPressable>
+            <View style={styles.accountProfileText}>
+              <Text numberOfLines={1} style={styles.accountName}>{name || 'Usuário'}</Text>
+              <Text numberOfLines={1} style={styles.accountEmail}>
+                {isGuest ? 'Acesso temporário como visitante' : user?.email || 'E-mail indisponível'}
+              </Text>
+              <View style={[styles.accountTypeBadge, isGuest && styles.accountTypeBadgeGuest]}>
+                <Ionicons
+                  name={isGuest ? 'person-outline' : 'shield-checkmark-outline'}
+                  size={12}
+                  color={isGuest ? palette.amber : palette.greenSuccess}
+                />
+                <Text style={[styles.accountTypeText, isGuest && styles.accountTypeTextGuest]}>
+                  {isGuest ? 'Conta de visitante' : 'Conta cadastrada'}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </Entrance>
+
+        <Entrance delay={150}>
+          <View style={styles.accountSectionCard}>
+            <Text style={styles.accountSectionTitle}>Dados pessoais</Text>
+            <AccountActionRow
+              description={photoUrl ? 'Escolha outra imagem da galeria' : 'Escolha uma imagem da galeria'}
+              disabled={Boolean(busyAction)}
+              icon="camera-outline"
+              label={busyAction === 'photo' ? 'Enviando foto…' : photoUrl ? 'Trocar foto' : 'Adicionar foto'}
+              onPress={chooseProfilePhoto}
+            />
+            {photoUrl ? (
+              <Pressable
+                accessibilityRole="button"
+                disabled={Boolean(busyAction)}
+                onPress={deleteProfilePhoto}
+                style={styles.removePhotoButton}>
+                <Ionicons name="trash-outline" size={14} color={palette.red} />
+                <Text style={styles.removePhotoButtonText}>
+                  {busyAction === 'removePhoto' ? 'Removendo foto…' : 'Remover foto atual'}
+                </Text>
+              </Pressable>
+            ) : null}
+            <View style={styles.accountRowDivider} />
+            {editingName ? (
+              <View style={styles.accountEditBlock}>
+                <Text style={styles.accountFieldLabel}>Nome de exibição</Text>
+                <TextInput
+                  accessibilityLabel="Nome de exibição"
+                  autoCapitalize="words"
+                  autoFocus
+                  onChangeText={setDraftName}
+                  placeholder="Seu nome"
+                  placeholderTextColor={palette.muted}
+                  style={styles.accountNameInput}
+                  value={draftName}
+                />
+                <View style={styles.accountInlineActions}>
+                  <MotionPressable
+                    accessibilityRole="button"
+                    disabled={Boolean(busyAction)}
+                    onPress={() => {
+                      setDraftName(name);
+                      setEditingName(false);
+                    }}
+                    style={styles.accountCancelButton}>
+                    <Text style={styles.accountCancelButtonText}>Cancelar</Text>
+                  </MotionPressable>
+                  <MotionPressable
+                    accessibilityRole="button"
+                    disabled={Boolean(busyAction)}
+                    onPress={saveName}
+                    style={[styles.accountSaveButton, busyAction === 'name' && styles.buttonDisabled]}>
+                    <Text style={styles.accountSaveButtonText}>
+                      {busyAction === 'name' ? 'Salvando…' : 'Salvar'}
+                    </Text>
+                  </MotionPressable>
+                </View>
+              </View>
+            ) : (
+              <AccountActionRow
+                description={name || 'Adicione um nome à conta'}
+                icon="person-outline"
+                label="Nome de exibição"
+                onPress={() => {
+                  setDraftName(name);
+                  setEditingName(true);
+                  setFeedback(undefined);
+                }}
+              />
+            )}
+
+            {!isGuest ? (
+              <>
+                <View style={styles.accountRowDivider} />
+                <View style={styles.accountStatusRow}>
+                  <View style={styles.accountActionIcon}>
+                    <Ionicons name="mail-outline" size={18} color={palette.green} />
+                  </View>
+                  <View style={styles.accountActionText}>
+                    <Text style={styles.accountActionLabel}>Verificação do e-mail</Text>
+                    <Text style={[styles.accountActionDescription, emailVerified && styles.verifiedText]}>
+                      {emailVerified ? 'E-mail verificado' : 'Verificação pendente'}
+                    </Text>
+                  </View>
+                  <Ionicons
+                    name={emailVerified ? 'checkmark-circle' : 'alert-circle-outline'}
+                    size={21}
+                    color={emailVerified ? palette.greenSuccess : palette.amber}
+                  />
+                </View>
+                {!emailVerified ? (
+                  <View style={styles.verificationActions}>
+                    <MotionPressable
+                      accessibilityRole="button"
+                      disabled={Boolean(busyAction)}
+                      onPress={sendVerification}
+                      style={styles.verificationPrimaryButton}>
+                      <Text style={styles.verificationPrimaryText}>
+                        {busyAction === 'verification' ? 'Enviando…' : 'Enviar verificação'}
+                      </Text>
+                    </MotionPressable>
+                    <Pressable
+                      accessibilityRole="button"
+                      disabled={Boolean(busyAction)}
+                      onPress={refreshVerification}
+                      style={styles.verificationRefreshButton}>
+                      <Text style={styles.verificationRefreshText}>
+                        {busyAction === 'refresh' ? 'Atualizando…' : 'Já verifiquei'}
+                      </Text>
+                    </Pressable>
+                  </View>
+                ) : null}
+              </>
+            ) : (
+              <View style={styles.guestAccountNotice}>
+                <Ionicons name="information-circle-outline" size={17} color={palette.amber} />
+                <Text style={styles.guestAccountNoticeText}>
+                  Se você sair, não será possível entrar novamente nesta mesma conta de visitante.
+                </Text>
+              </View>
+            )}
+          </View>
+        </Entrance>
+
+        <Entrance delay={220}>
+          <View style={styles.accountSectionCard}>
+            <Text style={styles.accountSectionTitle}>Acesso e segurança</Text>
+            {!isGuest ? (
+              <>
+                <AccountActionRow
+                  description="Receba um link seguro no seu e-mail"
+                  disabled={Boolean(busyAction)}
+                  icon="key-outline"
+                  label={busyAction === 'reset' ? 'Enviando instruções…' : 'Redefinir senha'}
+                  onPress={resetAccountPassword}
+                />
+                <View style={styles.accountRowDivider} />
+              </>
+            ) : null}
+            <AccountActionRow
+              description="Voltar para a tela de entrada"
+              disabled={Boolean(busyAction)}
+              icon="log-out-outline"
+              label={busyAction === 'logout' ? 'Saindo…' : 'Sair da conta'}
+              onPress={leaveAccount}
+            />
+          </View>
+        </Entrance>
+
+        {feedback ? (
+          <Entrance delay={250}>
+            <AuthFeedback message={feedback.message} tone={feedback.tone} />
+          </Entrance>
+        ) : null}
+
+        <Entrance delay={290}>
+          <View style={styles.accountDangerCard}>
+            <Text style={styles.accountDangerTitle}>Excluir conta</Text>
+            <Text style={styles.accountDangerDescription}>
+              Exclui definitivamente sua conta e todas as análises salvas no Firebase.
+            </Text>
+            {confirmDelete ? (
+              <View style={styles.accountDeleteConfirm}>
+                {!isGuest ? (
+                  <>
+                    <Text style={styles.accountFieldLabel}>Confirme sua senha atual</Text>
+                    <TextInput
+                      accessibilityLabel="Senha atual"
+                      autoCapitalize="none"
+                      onChangeText={setCurrentPassword}
+                      placeholder="Digite sua senha"
+                      placeholderTextColor={palette.muted}
+                      secureTextEntry
+                      style={styles.accountNameInput}
+                      value={currentPassword}
+                    />
+                  </>
+                ) : null}
+                <Text style={styles.accountDeleteWarning}>Esta ação não poderá ser desfeita.</Text>
+                <View style={styles.accountInlineActions}>
+                  <MotionPressable
+                    accessibilityRole="button"
+                    disabled={Boolean(busyAction)}
+                    onPress={() => {
+                      setConfirmDelete(false);
+                      setCurrentPassword('');
+                    }}
+                    style={styles.accountCancelButton}>
+                    <Text style={styles.accountCancelButtonText}>Cancelar</Text>
+                  </MotionPressable>
+                  <MotionPressable
+                    accessibilityRole="button"
+                    disabled={Boolean(busyAction) || (!isGuest && !currentPassword)}
+                    onPress={removeAccount}
+                    style={[
+                      styles.accountDeleteButton,
+                      (Boolean(busyAction) || (!isGuest && !currentPassword)) && styles.buttonDisabled,
+                    ]}>
+                    <Text style={styles.accountDeleteButtonText}>
+                      {busyAction === 'delete' ? 'Excluindo…' : 'Excluir definitivamente'}
+                    </Text>
+                  </MotionPressable>
+                </View>
+              </View>
+            ) : (
+              <MotionPressable
+                accessibilityRole="button"
+                onPress={() => {
+                  setConfirmDelete(true);
+                  setFeedback(undefined);
+                }}
+                style={styles.accountDangerButton}>
+                <Ionicons name="trash-outline" size={17} color={palette.red} />
+                <Text style={styles.accountDangerButtonText}>Excluir minha conta</Text>
+              </MotionPressable>
+            )}
+          </View>
+        </Entrance>
+      </ScrollView>
+    </AppScreen>
+  );
+}
+
+function AccountActionRow({
+  label,
+  description,
+  icon,
+  disabled = false,
+  onPress,
+}: {
+  label: string;
+  description: string;
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  disabled?: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <MotionPressable
+      accessibilityRole="button"
+      accessibilityState={{ disabled }}
+      disabled={disabled}
+      onPress={onPress}
+      style={[styles.accountActionRow, disabled && styles.buttonDisabled]}>
+      <View style={styles.accountActionIcon}>
+        <Ionicons name={icon} size={18} color={palette.green} />
+      </View>
+      <View style={styles.accountActionText}>
+        <Text style={styles.accountActionLabel}>{label}</Text>
+        <Text style={styles.accountActionDescription}>{description}</Text>
+      </View>
+      <Ionicons name="chevron-forward" size={18} color={palette.muted} />
+    </MotionPressable>
+  );
+}
+
 // Estilos do protótipo mobile: espaçamentos, tipografia, cartões, estados e sombras por plataforma.
 const styles = StyleSheet.create({
   screenTransition: {
@@ -1490,6 +2341,9 @@ const styles = StyleSheet.create({
   },
   fullWidth: {
     width: '100%',
+  },
+  keyboardView: {
+    flex: 1,
   },
   stage: {
     flex: 1,
@@ -1821,6 +2675,13 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 16,
     fontWeight: '500',
+  },
+  authFeedbackSuccess: {
+    borderColor: '#CDE9D9',
+    backgroundColor: '#F0FAF4',
+  },
+  authFeedbackTextSuccess: {
+    color: palette.greenSuccess,
   },
   privacyBadge: {
     height: 33,
@@ -2586,9 +3447,69 @@ const styles = StyleSheet.create({
     paddingTop: 14,
     paddingBottom: 94,
   },
+  historyControls: {
+    marginTop: 22,
+    gap: 10,
+  },
+  historySearchBox: {
+    height: 46,
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: palette.border,
+    backgroundColor: palette.surface,
+  },
+  historySearchInput: {
+    flex: 1,
+    color: palette.text,
+    fontSize: 13,
+    lineHeight: 17,
+    padding: 0,
+    ...Platform.select({
+      web: { outlineColor: 'transparent', outlineWidth: 0 },
+      default: {},
+    }),
+  },
+  historyFilterRow: {
+    gap: 8,
+    paddingRight: 4,
+  },
+  filterChip: {
+    minHeight: 32,
+    paddingHorizontal: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: palette.border,
+    backgroundColor: palette.surface,
+  },
+  filterChipSelected: {
+    borderColor: palette.green,
+    backgroundColor: palette.greenSoft,
+  },
+  filterChipText: {
+    color: palette.muted,
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: '500',
+  },
+  filterChipTextSelected: {
+    color: palette.green,
+    fontWeight: '700',
+  },
   historyList: {
-    marginTop: 42,
-    gap: 20,
+    marginTop: 24,
+    gap: 14,
+  },
+  historyCount: {
+    color: palette.muted,
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: '600',
   },
   historyState: {
     minHeight: 180,
@@ -2623,11 +3544,25 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     textAlign: 'center',
   },
+  clearFiltersButton: {
+    minHeight: 36,
+    marginTop: 4,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 14,
+    backgroundColor: palette.greenSoft,
+  },
+  clearFiltersText: {
+    color: palette.green,
+    fontSize: 12,
+    lineHeight: 15,
+    fontWeight: '700',
+  },
   historyCard: {
-    position: 'relative',
-    height: 96,
+    minHeight: 106,
     paddingHorizontal: 17,
-    paddingTop: 12,
+    paddingVertical: 13,
     borderRadius: 18,
     borderWidth: 1,
     borderColor: palette.border,
@@ -2643,38 +3578,244 @@ const styles = StyleSheet.create({
       },
     }),
   },
+  historyCardTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  historyTypeRow: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
   historyDate: {
     color: palette.muted,
     fontSize: 11,
     lineHeight: 13,
   },
+  historyCardBody: {
+    marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  historyCardText: {
+    flex: 1,
+  },
   historyTitle: {
-    marginTop: 8,
     color: palette.text,
     fontSize: 14,
     lineHeight: 17,
     fontWeight: '600',
   },
   historyRisk: {
-    marginTop: 10,
+    marginTop: 7,
     fontSize: 12,
     lineHeight: 14,
     fontWeight: '600',
   },
   riskBadge: {
-    position: 'absolute',
-    top: 16,
-    right: 19,
-    width: 70,
-    height: 28,
+    minWidth: 64,
+    height: 25,
+    paddingHorizontal: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 14,
+    borderRadius: 13,
   },
   riskBadgeText: {
     fontSize: 11,
     lineHeight: 13,
     fontWeight: '600',
+  },
+  historyDetailContent: {
+    flexGrow: 1,
+    paddingHorizontal: 24,
+    paddingTop: 14,
+    paddingBottom: 34,
+  },
+  historyDetailRiskCard: {
+    minHeight: 120,
+    marginTop: 22,
+    paddingHorizontal: 18,
+    paddingVertical: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(19, 71, 61, 0.08)',
+  },
+  historyDetailRiskText: {
+    flex: 1,
+  },
+  historyDetailRiskLabel: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: '800',
+  },
+  historyDetailTitle: {
+    marginTop: 9,
+    color: palette.text,
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: '600',
+  },
+  historyDetailScore: {
+    fontSize: 32,
+    lineHeight: 38,
+    fontWeight: '800',
+  },
+  historyMetadataCard: {
+    minHeight: 72,
+    marginTop: 14,
+    paddingHorizontal: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: palette.border,
+    backgroundColor: palette.surface,
+  },
+  historyMetadataItem: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9,
+  },
+  historyMetadataDivider: {
+    width: 1,
+    height: 34,
+    marginHorizontal: 10,
+    backgroundColor: palette.border,
+  },
+  historyMetadataLabel: {
+    color: palette.muted,
+    fontSize: 9,
+    lineHeight: 12,
+  },
+  historyMetadataValue: {
+    marginTop: 3,
+    color: palette.text,
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: '600',
+  },
+  historyDetailSectionTitle: {
+    marginTop: 22,
+    marginBottom: 10,
+    color: palette.text,
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: '700',
+  },
+  historyMessageCard: {
+    paddingHorizontal: 15,
+    paddingVertical: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: palette.border,
+    backgroundColor: palette.surface,
+  },
+  historyMessageText: {
+    color: palette.text,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  historyDetailWarnings: {
+    gap: 9,
+  },
+  historyDetailWarningRow: {
+    minHeight: 48,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 11,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: palette.border,
+    backgroundColor: palette.surface,
+  },
+  historyModelText: {
+    marginTop: 12,
+    color: palette.green,
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: '600',
+  },
+  deleteHistoryButton: {
+    height: 48,
+    marginTop: 22,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#F2CCCC',
+    backgroundColor: '#FFF8F8',
+  },
+  deleteHistoryButtonText: {
+    color: palette.red,
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: '700',
+  },
+  deleteConfirmCard: {
+    marginTop: 22,
+    padding: 16,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#F2CCCC',
+    backgroundColor: '#FFF8F8',
+  },
+  deleteConfirmTitle: {
+    color: palette.red,
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: '700',
+  },
+  deleteConfirmText: {
+    marginTop: 6,
+    color: palette.muted,
+    fontSize: 11,
+    lineHeight: 16,
+  },
+  deleteConfirmActions: {
+    marginTop: 14,
+    flexDirection: 'row',
+    gap: 10,
+  },
+  cancelDeleteButton: {
+    flex: 1,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: palette.border,
+    backgroundColor: palette.surface,
+  },
+  cancelDeleteText: {
+    color: palette.text,
+    fontSize: 12,
+    lineHeight: 15,
+    fontWeight: '600',
+  },
+  confirmDeleteButton: {
+    flex: 1,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 13,
+    backgroundColor: palette.red,
+  },
+  confirmDeleteText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    lineHeight: 15,
+    fontWeight: '700',
   },
   learnContent: {
     flexGrow: 1,
@@ -2773,6 +3914,358 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 14,
     fontWeight: '600',
+  },
+  accountContent: {
+    flexGrow: 1,
+    paddingHorizontal: 24,
+    paddingTop: 14,
+    paddingBottom: 100,
+  },
+  accountProfileCard: {
+    minHeight: 112,
+    marginTop: 22,
+    paddingHorizontal: 17,
+    paddingVertical: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    borderRadius: 21,
+    backgroundColor: palette.green,
+    ...Platform.select({
+      web: { boxShadow: '0px 12px 26px rgba(19, 71, 61, 0.17)' },
+      default: {
+        shadowColor: palette.green,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.17,
+        shadowRadius: 12,
+        elevation: 5,
+      },
+    }),
+  },
+  accountAvatarButton: {
+    position: 'relative',
+    width: 66,
+    height: 66,
+  },
+  accountAvatar: {
+    width: 62,
+    height: 62,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
+    backgroundColor: 'rgba(255,255,255,0.13)',
+  },
+  accountAvatarImage: {
+    width: '100%',
+    height: '100%',
+  },
+  accountAvatarText: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    lineHeight: 25,
+    fontWeight: '800',
+  },
+  accountCameraBadge: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
+    width: 25,
+    height: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 13,
+    borderWidth: 2,
+    borderColor: palette.green,
+    backgroundColor: '#FFFFFF',
+  },
+  accountProfileText: {
+    flex: 1,
+  },
+  accountName: {
+    color: '#FFFFFF',
+    fontSize: 17,
+    lineHeight: 21,
+    fontWeight: '700',
+  },
+  accountEmail: {
+    marginTop: 4,
+    color: '#D9EEE8',
+    fontSize: 11,
+    lineHeight: 14,
+  },
+  accountTypeBadge: {
+    minHeight: 23,
+    marginTop: 9,
+    paddingHorizontal: 9,
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    borderRadius: 12,
+    backgroundColor: '#E5F7ED',
+  },
+  accountTypeBadgeGuest: {
+    backgroundColor: palette.amberSoft,
+  },
+  accountTypeText: {
+    color: palette.greenSuccess,
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: '700',
+  },
+  accountTypeTextGuest: {
+    color: palette.amber,
+  },
+  accountSectionCard: {
+    marginTop: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 15,
+    borderRadius: 19,
+    borderWidth: 1,
+    borderColor: palette.border,
+    backgroundColor: palette.surface,
+  },
+  accountSectionTitle: {
+    marginBottom: 8,
+    color: palette.text,
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: '700',
+  },
+  accountActionRow: {
+    minHeight: 58,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 11,
+  },
+  accountActionIcon: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+    backgroundColor: palette.greenSoft,
+  },
+  accountActionText: {
+    flex: 1,
+  },
+  accountActionLabel: {
+    color: palette.text,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '600',
+  },
+  accountActionDescription: {
+    marginTop: 3,
+    color: palette.muted,
+    fontSize: 10,
+    lineHeight: 14,
+  },
+  verifiedText: {
+    color: palette.greenSuccess,
+    fontWeight: '700',
+  },
+  accountRowDivider: {
+    height: 1,
+    backgroundColor: '#EDF0F4',
+  },
+  removePhotoButton: {
+    minHeight: 32,
+    marginTop: -3,
+    marginBottom: 7,
+    marginLeft: 47,
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  removePhotoButtonText: {
+    color: palette.red,
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: '600',
+  },
+  accountStatusRow: {
+    minHeight: 58,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 11,
+  },
+  verificationActions: {
+    paddingLeft: 47,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  verificationPrimaryButton: {
+    minHeight: 34,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+    backgroundColor: palette.green,
+  },
+  verificationPrimaryText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: '700',
+  },
+  verificationRefreshButton: {
+    minHeight: 34,
+    paddingHorizontal: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  verificationRefreshText: {
+    color: palette.green,
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: '700',
+  },
+  guestAccountNotice: {
+    marginTop: 8,
+    paddingHorizontal: 11,
+    paddingVertical: 9,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 7,
+    borderRadius: 13,
+    backgroundColor: palette.amberSoft,
+  },
+  guestAccountNoticeText: {
+    flex: 1,
+    color: palette.amber,
+    fontSize: 10,
+    lineHeight: 14,
+  },
+  accountEditBlock: {
+    paddingTop: 6,
+  },
+  accountFieldLabel: {
+    marginBottom: 7,
+    color: palette.text,
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: '600',
+  },
+  accountNameInput: {
+    height: 44,
+    paddingHorizontal: 13,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: palette.border,
+    backgroundColor: '#FBFCFD',
+    color: palette.text,
+    fontSize: 12,
+    lineHeight: 16,
+    ...Platform.select({
+      web: { outlineColor: 'transparent', outlineWidth: 0 },
+      default: {},
+    }),
+  },
+  accountInlineActions: {
+    marginTop: 11,
+    flexDirection: 'row',
+    gap: 9,
+  },
+  accountCancelButton: {
+    flex: 1,
+    height: 39,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: palette.border,
+    backgroundColor: palette.surface,
+  },
+  accountCancelButtonText: {
+    color: palette.text,
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: '600',
+  },
+  accountSaveButton: {
+    flex: 1,
+    height: 39,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 13,
+    backgroundColor: palette.green,
+  },
+  accountSaveButtonText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: '700',
+  },
+  accountDangerCard: {
+    marginTop: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 15,
+    borderRadius: 19,
+    borderWidth: 1,
+    borderColor: '#F2CCCC',
+    backgroundColor: '#FFF9F9',
+  },
+  accountDangerTitle: {
+    color: palette.red,
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: '700',
+  },
+  accountDangerDescription: {
+    marginTop: 5,
+    color: palette.muted,
+    fontSize: 10,
+    lineHeight: 15,
+  },
+  accountDangerButton: {
+    height: 41,
+    marginTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: '#F2CCCC',
+    backgroundColor: palette.surface,
+  },
+  accountDangerButtonText: {
+    color: palette.red,
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: '700',
+  },
+  accountDeleteConfirm: {
+    marginTop: 13,
+  },
+  accountDeleteWarning: {
+    marginTop: 9,
+    color: palette.red,
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: '600',
+  },
+  accountDeleteButton: {
+    flex: 1.35,
+    height: 39,
+    paddingHorizontal: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 13,
+    backgroundColor: palette.red,
+  },
+  accountDeleteButtonText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: '700',
+    textAlign: 'center',
   },
   pressed: {
     opacity: 0.72,

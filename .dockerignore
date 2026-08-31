@@ -2,11 +2,25 @@
 .git
 .expo
 .vscode
+.claude
 node_modules
 dist
 web-build
+
+# O modelo é baixado do Hugging Face Hub no build; a pasta local não precisa ser copiada.
+models
+
+# Fontes do app mobile (Expo/React Native) — não são usadas pela API Python.
+app
+assets
+components
+constants
+hooks
+lib
+scripts
+training
 data
-models/*.zip
+
 # Ambientes locais e caches do Python aumentariam muito a imagem.
 backend/.venv
 **/__pycache__
