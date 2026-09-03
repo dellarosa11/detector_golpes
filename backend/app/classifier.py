@@ -24,7 +24,7 @@ class BertimbauClassifier:
         self.max_length = max_length
         self.tokenizer = AutoTokenizer.from_pretrained(
             str(model_path),
-            use_fast=True,
+            use_fast=False,  # BERTimbau usa SentencePiece; o fast tokenizer não é suportado.
         )
         self.model = AutoModelForSequenceClassification.from_pretrained(
             str(model_path),
