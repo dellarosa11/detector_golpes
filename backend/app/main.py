@@ -24,11 +24,11 @@ from .risk import (
 )
 
 
-# MODEL_PATH pode ser um caminho local ou um ID do Hugging Face Hub (ex: "usuario/modelo").
-# No Render, defina a variável de ambiente MODEL_PATH com o ID do modelo no HF Hub.
+# Caminho para o modelo fine-tunado. Sobrescreva MODEL_PATH via variável de ambiente
+# para apontar para outra versão sem alterar o código.
+# O modelo fica em models/bertimbau-smishing-v2/ na raiz do repositório.
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-_default_model = str(PROJECT_ROOT / "models" / "bertimbau-smishing-v2")
-MODEL_PATH = os.getenv("MODEL_PATH", _default_model)
+MODEL_PATH = Path(os.getenv("MODEL_PATH", str(PROJECT_ROOT / "models" / "bertimbau-smishing-v2")))
 LOW_THRESHOLD = float(os.getenv("LOW_RISK_THRESHOLD", "0.35"))
 HIGH_THRESHOLD = float(os.getenv("HIGH_RISK_THRESHOLD", "0.70"))
 MAX_IMAGE_BYTES = int(os.getenv("MAX_IMAGE_BYTES", str(4 * 1024 * 1024)))
@@ -76,7 +76,9 @@ class PredictionResponse(BaseModel):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # BERTimbau e OCR são carregados uma única vez, antes de aceitar requisições.
+    # Carrega o modelo e o OCR uma única vez na inicialização.
+    # O lifespan garante que ambos ficam disponíveis durante toda a vida da API
+    # e são liberados da memória ao desligar.
     app.state.classifier = BertimbauClassifier(MODEL_PATH)
     app.state.ocr = ImageTextExtractor()
     yield

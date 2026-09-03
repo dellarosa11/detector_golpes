@@ -11,32 +11,41 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer
 class BertimbauClassifier:
     """Mantém tokenizer e modelo carregados uma única vez durante a vida da API."""
 
-    def __init__(self, model_path: str | Path, max_length: int = 160) -> None:
-        # Caminhos absolutos são validados localmente.
-        # Strings relativas (ex: "usuario/modelo") são tratadas como IDs do Hugging Face Hub
-        # e baixadas automaticamente; o token é lido da variável HF_TOKEN.
-        _path = Path(model_path)
-        if _path.is_absolute() and not _path.is_dir():
+    def __init__(self, model_path: Path, max_length: int = 160) -> None:
+        # Garante que a pasta do modelo existe localmente antes de tentar carregar.
+        # O modelo fica em models/bertimbau-smishing-v2/ na raiz do projeto.
+        if not model_path.is_dir():
             raise FileNotFoundError(f"Pasta do modelo não encontrada: {model_path}")
 
+        # Evita avisos de deadlock do tokenizador em ambientes com múltiplas threads.
         os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
         self.model_path = model_path
         self.max_length = max_length
+
+        # local_files_only=True impede downloads acidentais do Hugging Face Hub;
+        # todos os arquivos do modelo devem estar presentes na pasta local.
+        # O tokenizer.json foi regenerado com AutoTokenizer para garantir compatibilidade
+        # com a versão atual da biblioteca tokenizers (rodar backend/scripts/ se precisar refazer).
         self.tokenizer = AutoTokenizer.from_pretrained(
-            str(model_path),
-            use_fast=False,  # BERTimbau usa SentencePiece; o fast tokenizer não é suportado.
+            model_path,
+            local_files_only=True,
+            use_fast=True,
         )
         self.model = AutoModelForSequenceClassification.from_pretrained(
-            str(model_path),
+            model_path,
+            local_files_only=True,
         )
         self.model.eval()
-        # Usa GPU quando disponível e funciona em CPU para desenvolvimento e Cloud Run.
+
+        # Usa GPU automaticamente se disponível; caso contrário, roda em CPU.
+        # inference_mode() reduz uso de memória por não calcular gradientes.
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model.to(self.device)
-        # Serializa a inferência para evitar concorrência insegura sobre a mesma instância.
+
+        # Lock serializa as inferências para evitar condição de corrida na mesma instância.
         self._lock = threading.Lock()
 
-        # Lê os índices do config.json para não depender de uma ordem fixa das classes.
+        # Lê os rótulos do config.json para não depender de uma ordem fixa entre classes.
         label2id = {str(label).lower(): int(index) for label, index in self.model.config.label2id.items()}
         self.legitimate_id = label2id.get("legitima", 0)
         self.smishing_id = label2id.get("smishing", 1)
@@ -52,7 +61,6 @@ class BertimbauClassifier:
         inputs = {name: tensor.to(self.device) for name, tensor in inputs.items()}
 
         with self._lock, torch.inference_mode():
-            # inference_mode reduz memória porque não são calculados gradientes no servidor.
             logits = self.model(**inputs).logits[0]
             probabilities = torch.softmax(logits, dim=-1).cpu().tolist()
 
