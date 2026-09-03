@@ -31,7 +31,10 @@ yarn-error.*
 *.pem
 
 # local env files
-.env*.local
+.env
+.env.*
+!.env.example
+backend/.env
 
 # typescript
 *.tsbuildinfo
@@ -48,3 +51,22 @@ app-example
 /backend/__pycache__/
 **/__pycache__/
 *.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Firebase service account credentials
+*-service-account*.json
+serviceAccountKey.json
+google-services.json
+GoogleService-Info.plist
+
+# Build outputs
+build/
+*.log
+
+# IDEs
+.vscode/settings.json
+.idea/
