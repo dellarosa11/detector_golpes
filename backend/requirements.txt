@@ -1,3 +1,5 @@
+# Tokenizador usado pelo BERTimbau (neuralmind/bert-base-portuguese-cased).
+sentencepiece>=0.2,<1
 # Servidor HTTP e validação dos dados de entrada/saída.
 fastapi>=0.116,<1
 # Verificação dos tokens enviados pelo Firebase Auth.
