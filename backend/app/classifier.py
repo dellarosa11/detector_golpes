@@ -11,22 +11,23 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer
 class BertimbauClassifier:
     """Mantém tokenizer e modelo carregados uma única vez durante a vida da API."""
 
-    def __init__(self, model_path: Path, max_length: int = 160) -> None:
-        if not model_path.is_dir():
+    def __init__(self, model_path: str | Path, max_length: int = 160) -> None:
+        # Caminhos absolutos são validados localmente.
+        # Strings relativas (ex: "usuario/modelo") são tratadas como IDs do Hugging Face Hub
+        # e baixadas automaticamente; o token é lido da variável HF_TOKEN.
+        _path = Path(model_path)
+        if _path.is_absolute() and not _path.is_dir():
             raise FileNotFoundError(f"Pasta do modelo não encontrada: {model_path}")
 
         os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
         self.model_path = model_path
         self.max_length = max_length
-        # local_files_only impede downloads inesperados; todos os arquivos vêm da pasta models.
         self.tokenizer = AutoTokenizer.from_pretrained(
-            model_path,
-            local_files_only=True,
+            str(model_path),
             use_fast=True,
         )
         self.model = AutoModelForSequenceClassification.from_pretrained(
-            model_path,
-            local_files_only=True,
+            str(model_path),
         )
         self.model.eval()
         # Usa GPU quando disponível e funciona em CPU para desenvolvimento e Cloud Run.

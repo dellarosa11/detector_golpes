@@ -24,10 +24,11 @@ from .risk import (
 )
 
 
-# Configurações podem ser substituídas por variáveis de ambiente ao publicar o contêiner.
+# MODEL_PATH pode ser um caminho local ou um ID do Hugging Face Hub (ex: "usuario/modelo").
+# No Render, defina a variável de ambiente MODEL_PATH com o ID do modelo no HF Hub.
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_MODEL_PATH = PROJECT_ROOT / "models" / "bertimbau-smishing-v2"
-MODEL_PATH = Path(os.getenv("MODEL_PATH", str(DEFAULT_MODEL_PATH))).resolve()
+_default_model = str(PROJECT_ROOT / "models" / "bertimbau-smishing-v2")
+MODEL_PATH = os.getenv("MODEL_PATH", _default_model)
 LOW_THRESHOLD = float(os.getenv("LOW_RISK_THRESHOLD", "0.35"))
 HIGH_THRESHOLD = float(os.getenv("HIGH_RISK_THRESHOLD", "0.70"))
 MAX_IMAGE_BYTES = int(os.getenv("MAX_IMAGE_BYTES", str(4 * 1024 * 1024)))
