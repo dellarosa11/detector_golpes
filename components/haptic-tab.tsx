@@ -2,6 +2,7 @@ import { BottomTabBarButtonProps } from '@react-navigation/bottom-tabs';
 import { PlatformPressable } from '@react-navigation/elements';
 import * as Haptics from 'expo-haptics';
 
+// Botão de aba que adiciona retorno tátil no iOS sem substituir os eventos de navegação originais.
 export function HapticTab(props: BottomTabBarButtonProps) {
   return (
     <PlatformPressable

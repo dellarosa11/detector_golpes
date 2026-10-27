@@ -31,6 +31,7 @@ function classifierApiUrl() {
   return configuredUrl;
 }
 
+// Confere os campos essenciais antes de tratar a resposta remota como RiskAnalysis.
 function isRiskAnalysis(value: unknown): value is RiskAnalysis {
   // Validação em tempo de execução impede que uma resposta incompleta quebre a tela de resultado.
   if (!value || typeof value !== 'object') return false;
@@ -58,6 +59,7 @@ async function requestRiskAnalysis(
   invalidInputCode: string,
   firebaseIdToken?: string
 ) {
+  // Compartilha timeout, autenticação e tratamento HTTP entre rotas de texto e imagem.
   // AbortController evita deixar o aplicativo preso se o computador/API estiver indisponível.
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), requestTimeoutMs);
@@ -99,6 +101,7 @@ export function classifyRisk(
   firebaseIdToken?: string,
   analysisType: 'message' | 'link' = 'message'
 ) {
+  // Envia mensagens ou links à rota textual e escolhe o código de erro correspondente.
   return requestRiskAnalysis(
     '/v1/predict',
     { text: text.trim(), analysisType },
@@ -108,6 +111,7 @@ export function classifyRisk(
 }
 
 export function classifyImageRisk(imageData: string, firebaseIdToken?: string) {
+  // Envia a imagem em Data URL para a rota que executa OCR antes da classificação.
   return requestRiskAnalysis(
     '/v1/predict/image',
     { imageData },

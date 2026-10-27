@@ -8,6 +8,7 @@ import { Platform } from 'react-native';
 const tintColorLight = '#0a7ea4';
 const tintColorDark = '#fff';
 
+// Paletas-base usadas pelos componentes de demonstração que seguem o tema do sistema.
 export const Colors = {
   light: {
     text: '#11181C',
@@ -28,6 +29,7 @@ export const Colors = {
 };
 
 export const Fonts = Platform.select({
+  // Escolhe famílias de fonte equivalentes em cada plataforma.
   ios: {
     /** iOS `UIFontDescriptorSystemDesignDefault` */
     sans: 'system-ui',

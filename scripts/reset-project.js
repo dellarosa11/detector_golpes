@@ -10,12 +10,15 @@ const fs = require("fs");
 const path = require("path");
 const readline = require("readline");
 
+// Usa a pasta de onde o script foi iniciado como raiz do projeto a reorganizar.
 const root = process.cwd();
+// Pastas que serão movidas para o exemplo ou removidas conforme a resposta.
 const oldDirs = ["app", "components", "hooks", "constants", "scripts"];
 const exampleDir = "app-example";
 const newAppDir = "app";
 const exampleDirPath = path.join(root, exampleDir);
 
+// Conteúdo mínimo usado para recriar a rota inicial e o layout depois da limpeza.
 const indexContent = `import { Text, View } from "react-native";
 
 export default function Index() {
@@ -70,7 +73,7 @@ const moveDirectories = async (userInput) => {
       }
     }
 
-    // Create new /app directory
+    // Cria uma estrutura Expo Router vazia após mover ou excluir as pastas anteriores.
     const newAppDirPath = path.join(root, newAppDir);
     await fs.promises.mkdir(newAppDirPath, { recursive: true });
     console.log("\n📁 New /app directory created.");
@@ -99,6 +102,7 @@ const moveDirectories = async (userInput) => {
 };
 
 rl.question(
+  // A resposta padrão preserva os arquivos dentro de app-example em vez de apagá-los.
   "Do you want to move existing files to /app-example instead of deleting them? (Y/n): ",
   (answer) => {
     const userInput = answer.trim().toLowerCase() || "y";

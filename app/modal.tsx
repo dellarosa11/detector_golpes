@@ -4,6 +4,7 @@ import { StyleSheet } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 
+// Tela modal de exemplo, com um link que fecha o modal e retorna à tela inicial.
 export default function ModalScreen() {
   return (
     <ThemedView style={styles.container}>
@@ -16,6 +17,7 @@ export default function ModalScreen() {
 }
 
 const styles = StyleSheet.create({
+  // Centraliza o conteúdo do modal e separa visualmente o link do título.
   container: {
     flex: 1,
     alignItems: 'center',

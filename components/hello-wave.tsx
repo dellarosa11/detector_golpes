@@ -1,5 +1,6 @@
 import Animated from 'react-native-reanimated';
 
+// Exibe uma saudação com uma animação curta de balanço para ilustrar animações do Reanimated.
 export function HelloWave() {
   return (
     <Animated.Text

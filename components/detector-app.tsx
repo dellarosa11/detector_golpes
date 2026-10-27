@@ -25,7 +25,6 @@ import {
 import Animated, {
   cancelAnimation,
   Easing,
-  FadeIn,
   FadeInDown,
   useAnimatedStyle,
   useReducedMotion,
@@ -43,11 +42,13 @@ import {
   deleteAccountAndHistory,
   deleteAnalysis,
   firebaseErrorMessage,
+  getCachedAnalyses,
   getAccountPhoto,
   loginAsGuest,
   loginWithEmail,
   logout,
   observeAuth,
+  peekCachedAnalyses,
   reloadCurrentAccount,
   removeAccountPhoto,
   requestPasswordReset,
@@ -338,7 +339,6 @@ export default function DetectorApp() {
   const [analysisError, setAnalysisError] = useState<string>();
   const [themePreference, setThemePreference] = useState<ThemePreference>('system');
   const systemColorScheme = useColorScheme();
-  const reducedMotion = useReducedMotion();
 
   const darkTheme =
     themePreference === 'dark' || (themePreference === 'system' && systemColorScheme === 'dark');
@@ -565,7 +565,7 @@ export default function DetectorApp() {
       );
       break;
     case 'history':
-      content = <HistoryScreen navigate={setScreen} userId={user?.uid} />;
+      content = <HistoryScreen key={user?.uid ?? 'signed-out'} navigate={setScreen} userId={user?.uid} />;
       break;
     case 'learn':
       content = <LearnScreen navigate={setScreen} />;
@@ -587,12 +587,9 @@ export default function DetectorApp() {
   }
 
   return (
-    <Animated.View
-      key={screen}
-      entering={reducedMotion ? undefined : FadeIn.duration(260).easing(Easing.out(Easing.cubic))}
-      style={styles.screenTransition}>
+    <View style={styles.screenTransition}>
       {content}
-    </Animated.View>
+    </View>
   );
 }
 
@@ -604,7 +601,6 @@ function PhoneFrame({ children, auth = false }: { children: React.ReactNode; aut
     <View style={styles.stage}>
       <StatusBar
         style={isDarkTheme ? 'light' : 'dark'}
-        backgroundColor={auth ? palette.authBackground : palette.background}
         hidden={isWeb}
       />
       <SafeAreaView
@@ -619,6 +615,7 @@ function PhoneFrame({ children, auth = false }: { children: React.ReactNode; aut
 }
 
 
+// Reúne identidade visual, título e resumo no topo das telas de autenticação.
 function BrandHeader({ title, description }: { title: string; description: string }) {
   return (
     <View style={styles.authHeader}>
@@ -715,6 +712,7 @@ function FormField({
   );
 }
 
+// Exibe visualmente a avaliação local da senha durante o cadastro.
 function PasswordStrength({ password }: { password: string }) {
   const strength = getPasswordStrength(password);
 
@@ -740,6 +738,7 @@ function PasswordStrength({ password }: { password: string }) {
   );
 }
 
+// Padroniza os botões de autenticação, incluindo estado secundário e indisponível.
 function AuthButton({
   label,
   secondary = false,
@@ -767,6 +766,7 @@ function AuthButton({
   );
 }
 
+// Apresenta erros ou confirmações de autenticação com anúncio acessível para leitores de tela.
 function AuthFeedback({
   message,
   tone = 'error',
@@ -1133,6 +1133,7 @@ function AppScreen({
   );
 }
 
+// Renderiza a navegação inferior interna e destaca a seção atualmente selecionada.
 function BottomNavigation({
   active,
   navigate,
@@ -1241,6 +1242,7 @@ function HomeScreen({
   );
 }
 
+// Atalho reutilizável para escolher mensagem, link ou imagem na página inicial.
 function AnalysisOption({
   symbol,
   title,
@@ -1269,6 +1271,7 @@ function AnalysisOption({
   );
 }
 
+// Cabeçalho compacto para retornar à tela anterior e identificar a etapa atual.
 function BackHeader({ title, onBack }: { title: string; onBack: () => void }) {
   return (
     <View style={styles.backHeader}>
@@ -1622,6 +1625,7 @@ function ProcessingScreen({ analysisType }: { analysisType: AnalysisType }) {
 }
 
 // Anima a barra até a porcentagem calculada e limita valores fora do intervalo de 0 a 100%.
+// Barra animada que representa a pontuação normalizada de risco.
 function RiskProgress({ value, color }: { value: number; color: string }) {
   const reducedMotion = useReducedMotion();
   const normalizedValue = Math.max(0, Math.min(1, value));
@@ -1830,6 +1834,7 @@ function formatHistoryDate(date: Date | null) {
   return `${day}, ${time}`;
 }
 
+// Labels e ícones usados para diferenciar mensagens, links e imagens no histórico.
 const analysisTypePresentation: Record<
   AnalysisType,
   { label: string; icon: React.ComponentProps<typeof Ionicons>['name'] }
@@ -1839,6 +1844,7 @@ const analysisTypePresentation: Record<
   image: { label: 'Imagem', icon: 'image-outline' },
 };
 
+// Seleciona as cores do cartão de histórico segundo a classificação armazenada.
 function historyToneStyle(tone: AnalysisTone) {
   return tone === 'high'
     ? { backgroundColor: palette.redSoft, color: palette.red }
@@ -1847,6 +1853,7 @@ function historyToneStyle(tone: AnalysisTone) {
       : { backgroundColor: palette.greenSoft, color: palette.greenSuccess };
 }
 
+// Remove diferenças de acento e caixa para tornar a busca do histórico mais tolerante.
 function normalizeSearch(value: string) {
   return value
     .normalize('NFD')
@@ -1856,46 +1863,66 @@ function normalizeSearch(value: string) {
 
 // Assina as atualizações do Firestore e adiciona busca, filtros e detalhes completos.
 function HistoryScreen({ navigate, userId }: { navigate: Navigate; userId?: string }) {
-  const [historyEntries, setHistoryEntries] = useState<StoredAnalysis[]>([]);
-  const [loadingHistory, setLoadingHistory] = useState(false);
-  const [historyError, setHistoryError] = useState<string>();
+  const cachedAtMount = userId ? peekCachedAnalyses(userId) : null;
+  const [historyEntries, setHistoryEntries] = useState<StoredAnalysis[]>(cachedAtMount ?? []);
+  const [loadingHistory, setLoadingHistory] = useState(
+    Boolean(userId && isFirebaseConfigured && !cachedAtMount)
+  );
+  const [historyError, setHistoryError] = useState<string | undefined>(() => {
+    if (!isFirebaseConfigured) return 'Configure o Firebase para carregar o histórico.';
+    if (!userId) return 'Entre em uma conta ou use o acesso como visitante.';
+    return undefined;
+  });
+  const [historyCacheError, setHistoryCacheError] = useState(false);
   const [search, setSearch] = useState('');
   const [riskFilter, setRiskFilter] = useState<'all' | AnalysisTone>('all');
   const [typeFilter, setTypeFilter] = useState<'all' | AnalysisType>('all');
   const [selectedEntry, setSelectedEntry] = useState<StoredAnalysis>();
 
   useEffect(() => {
-    setHistoryEntries([]);
-    setHistoryError(undefined);
+    if (!isFirebaseConfigured || !userId) return;
 
-    if (!isFirebaseConfigured) {
-      setHistoryError('Configure o Firebase para carregar o histórico.');
-      return;
-    }
+    let active = true;
+    let unsubscribe: (() => void) | undefined;
 
-    if (!userId) {
-      setHistoryError('Entre em uma conta ou use o acesso como visitante.');
-      return;
-    }
-
-    setLoadingHistory(true);
-    try {
-      return subscribeToAnalyses(
-        userId,
-        (analyses) => {
-          setHistoryEntries(analyses);
-          setLoadingHistory(false);
-        },
-        (error) => {
-          setHistoryError(firebaseErrorMessage(error));
+    const startSubscription = async () => {
+      try {
+        const cachedAnalyses = await getCachedAnalyses(userId);
+        if (active && cachedAnalyses) {
+          setHistoryEntries(cachedAnalyses);
           setLoadingHistory(false);
         }
-      );
-    } catch (error) {
-      setHistoryError(firebaseErrorMessage(error));
-      setLoadingHistory(false);
-      return;
-    }
+      } catch {
+        if (active) setHistoryCacheError(true);
+      }
+
+      if (!active) return;
+
+      try {
+        unsubscribe = subscribeToAnalyses(
+          userId,
+          (analyses) => {
+            setHistoryEntries(analyses);
+            setHistoryError(undefined);
+            setLoadingHistory(false);
+          },
+          (error) => {
+            setHistoryError(firebaseErrorMessage(error));
+            setLoadingHistory(false);
+          },
+          () => setHistoryCacheError(true)
+        );
+      } catch (error) {
+        setHistoryError(firebaseErrorMessage(error));
+        setLoadingHistory(false);
+      }
+    };
+
+    void startSubscription();
+    return () => {
+      active = false;
+      unsubscribe?.();
+    };
   }, [userId]);
 
   const filteredEntries = useMemo(() => {
@@ -1934,8 +1961,18 @@ function HistoryScreen({ navigate, userId }: { navigate: Navigate; userId?: stri
           <Text style={styles.pageTitle}>Histórico</Text>
           <Text style={styles.pageSubtitle}>Pesquise, filtre e reveja suas análises salvas.</Text>
         </Entrance>
+        {historyCacheError ? (
+          <Text style={styles.historyStateText}>
+            Não foi possível salvar o histórico neste aparelho. Ele continuará sincronizado com o Firebase.
+          </Text>
+        ) : null}
+        {historyError && historyEntries.length > 0 ? (
+          <Text style={styles.historyStateText}>
+            Não foi possível atualizar. Exibindo as análises salvas neste aparelho.
+          </Text>
+        ) : null}
 
-        {!loadingHistory && !historyError && historyEntries.length > 0 ? (
+        {historyEntries.length > 0 ? (
           <Entrance delay={85}>
             <View style={styles.historyControls}>
               <View style={styles.historySearchBox}>
@@ -1973,12 +2010,12 @@ function HistoryScreen({ navigate, userId }: { navigate: Navigate; userId?: stri
           </Entrance>
         ) : null}
 
-        {loadingHistory ? (
+        {loadingHistory && historyEntries.length === 0 ? (
           <View style={styles.historyState}>
             <ActivityIndicator color={palette.green} size="small" />
             <Text style={styles.historyStateText}>Carregando análises…</Text>
           </View>
-        ) : historyError ? (
+        ) : historyError && historyEntries.length === 0 ? (
           <View style={styles.historyState}>
             <View style={styles.historyStateIcon}>
               <Ionicons name="cloud-offline-outline" size={23} color={palette.muted} />
@@ -2031,6 +2068,7 @@ function HistoryScreen({ navigate, userId }: { navigate: Navigate; userId?: stri
   );
 }
 
+// Botão visual compartilhado pelos filtros de risco e tipo no histórico.
 function FilterChip({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
   return (
     <MotionPressable
@@ -2043,6 +2081,7 @@ function FilterChip({ label, selected, onPress }: { label: string; selected: boo
   );
 }
 
+// Resumo clicável de uma análise salva, com data, tipo e nível de risco.
 function HistoryCard({ entry, onPress }: { entry: StoredAnalysis; onPress: () => void }) {
   const toneStyle = historyToneStyle(entry.tone);
   const type = analysisTypePresentation[entry.analysisType];
@@ -2073,6 +2112,7 @@ function HistoryCard({ entry, onPress }: { entry: StoredAnalysis; onPress: () =>
   );
 }
 
+// Mostra os dados completos de uma análise salva e permite removê-la do Firestore.
 function HistoryDetailScreen({
   entry,
   userId,
@@ -2225,6 +2265,7 @@ const lessons = [
   { number: '04', title: 'Falso familiar', description: 'Alguém se passa por parente usando outro número.' },
 ] as const;
 
+// Apresenta os tópicos educativos estáticos junto da navegação principal.
 function LearnScreen({ navigate }: { navigate: Navigate }) {
   return (
     <AppScreen activeTab="learn" navigate={navigate}>
@@ -2265,6 +2306,7 @@ function LearnScreen({ navigate }: { navigate: Navigate }) {
   );
 }
 
+// Gera iniciais do nome ou e-mail para o avatar quando não há foto de perfil.
 function accountInitials(user: FirebaseUser | null) {
   const source = user?.displayName?.trim() || user?.email?.split('@')[0] || 'Visitante';
   return source
@@ -2770,6 +2812,7 @@ function AccountScreen({
   );
 }
 
+// Opção selecionável do grupo de tema (sistema, claro ou escuro).
 function ThemeOption({
   icon,
   label,
@@ -2799,6 +2842,7 @@ function ThemeOption({
   );
 }
 
+// Linha reutilizável para ações de conta com ícone, descrição e estado desabilitado.
 function AccountActionRow({
   label,
   description,
@@ -2831,7 +2875,7 @@ function AccountActionRow({
   );
 }
 
-// Gera uma única folha de estilos a partir da paleta ativa.
+// Gera uma única folha de estilos a partir da paleta ativa; os estilos são agrupados por tela.
 function createAppStyles(palette: AppPalette) {
   return StyleSheet.create({
     screenTransition: {

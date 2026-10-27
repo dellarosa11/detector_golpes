@@ -15,6 +15,7 @@ class ImageTextExtractor:
 
     def extract(self, image_bytes: bytes) -> str:
         """Corrige rotação, limita resolução e devolve somente linhas com confiança útil."""
+        # Corrige a orientação da foto e reduz imagens enormes antes de convertê-las para o OCR.
         with Image.open(BytesIO(image_bytes)) as source:
             image = ImageOps.exif_transpose(source).convert("RGB")
             image.thumbnail((2200, 2200))
@@ -33,6 +34,7 @@ class ImageTextExtractor:
         if not texts:
             return ""
 
+        # Descarta linhas vazias ou com baixa confiança e junta o texto na ordem fornecida pelo OCR.
         clean_lines: list[str] = []
         for index, value in enumerate(texts):
             score = float(scores[index]) if scores is not None and index < len(scores) else 1.0

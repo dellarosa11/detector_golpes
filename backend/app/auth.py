@@ -15,6 +15,7 @@ def _enabled(value: str | None, default: bool = False) -> bool:
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
+# Dependência do FastAPI: valida o token Firebase quando a autenticação está habilitada.
 def require_firebase_user(
     authorization: Annotated[str | None, Header()] = None,
 ) -> dict[str, object] | None:

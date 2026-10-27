@@ -6,6 +6,7 @@ from urllib.parse import urlsplit
 
 
 def risk_level(probability: float, low_threshold: float, high_threshold: float) -> str:
+    """Converte uma probabilidade contínua nos três níveis exibidos pela interface."""
     if probability < low_threshold:
         return "baixo"
     if probability < high_threshold:
@@ -122,6 +123,7 @@ def normalize_url(value: str) -> str:
 
 
 def _is_ip_host(hostname: str) -> bool:
+    """Identifica hosts que são endereços IP em vez de nomes de domínio."""
     try:
         ip_address(hostname.strip("[]"))
         return True

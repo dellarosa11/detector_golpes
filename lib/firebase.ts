@@ -24,6 +24,7 @@ let authInstance: Auth | null = null;
 let firestoreInstance: Firestore | null = null;
 
 export function getFirebaseServices() {
+  // Impede inicialização parcial caso falte alguma variável pública do projeto Firebase.
   if (!isFirebaseConfigured) {
     throw new Error('firebase/not-configured');
   }
@@ -32,6 +33,7 @@ export function getFirebaseServices() {
 
   if (!authInstance) {
     if (Platform.OS === 'web') {
+      // No navegador, o SDK padrão já gerencia a persistência de autenticação.
       authInstance = getAuth(appInstance);
     } else {
       try {
@@ -46,6 +48,7 @@ export function getFirebaseServices() {
     }
   }
 
+  // Cria o Firestore apenas uma vez e devolve os serviços reutilizáveis pelo app.
   firestoreInstance = firestoreInstance ?? getFirestore(appInstance);
 
   return {

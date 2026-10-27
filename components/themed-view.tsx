@@ -7,6 +7,7 @@ export type ThemedViewProps = ViewProps & {
   darkColor?: string;
 };
 
+// Contêiner que herda a cor de fundo do tema, permitindo sobrescrita por plataforma ou tela.
 export function ThemedView({ style, lightColor, darkColor, ...otherProps }: ThemedViewProps) {
   const backgroundColor = useThemeColor({ light: lightColor, dark: darkColor }, 'background');
 

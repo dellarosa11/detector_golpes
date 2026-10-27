@@ -8,6 +8,7 @@ import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Fonts } from '@/constants/theme';
 
+// Tela de demonstração do template Expo, acessível pela rota mas escondida da navegação visível.
 export default function TabTwoScreen() {
   return (
     <ParallaxScrollView
@@ -98,6 +99,7 @@ export default function TabTwoScreen() {
 }
 
 const styles = StyleSheet.create({
+  // Posiciona o ícone decorativo parcialmente fora do cabeçalho.
   headerImage: {
     color: '#808080',
     bottom: -90,

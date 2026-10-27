@@ -52,6 +52,7 @@ class BertimbauClassifier:
 
     def predict(self, text: str) -> dict[str, float | str]:
         """Tokeniza uma mensagem e devolve as probabilidades brutas do modelo."""
+        # Trunca entradas longas, move tensores para o dispositivo escolhido e calcula logits.
         inputs = self.tokenizer(
             text,
             return_tensors="pt",
@@ -66,6 +67,7 @@ class BertimbauClassifier:
 
         smishing_probability = float(probabilities[self.smishing_id])
         legitimate_probability = float(probabilities[self.legitimate_id])
+        # Converte as probabilidades em rótulo e confiança para a API combinar com as heurísticas.
         label = "smishing" if smishing_probability >= legitimate_probability else "legitima"
 
         return {

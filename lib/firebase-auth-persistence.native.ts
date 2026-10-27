@@ -5,5 +5,6 @@ import { getReactNativePersistence } from 'firebase/auth';
 
 // Implementação mobile: liga o Firebase Auth ao armazenamento persistente do aparelho.
 export function getFirebaseAuthPersistence() {
+  // O SDK usa AsyncStorage para restaurar a sessão entre inicializações do aplicativo.
   return getReactNativePersistence(AsyncStorage);
 }

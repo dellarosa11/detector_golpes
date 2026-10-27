@@ -175,6 +175,7 @@ def texto_normalizado(valor: object) -> str:
 
 
 def converter_rotulo(valor: object) -> int:
+    """Converte nomes de classes das bases externas para 0 (legítima) ou 1 (golpe)."""
     chave = limpar_texto(valor).lower()
     if chave not in ROTULOS_ACEITOS:
         raise ValueError(f"Rótulo desconhecido: {valor!r}")
@@ -222,6 +223,7 @@ TERMOS_DE_GOLPE = (
 
 
 def ataque_relevante(linha: dict[str, object]) -> bool:
+    """Mantém casos negativos e casos de defesa ligados a golpes ou engenharia social."""
     if not bool(linha["should_trigger_scam_defense"]):
         return True
     descricao = " ".join(
@@ -267,9 +269,11 @@ for split, caminho in arquivos_scambench.items():
             }
         )
 
+# Reúne exemplos extraídos da última mensagem do usuário em cada conversa do ScamBench.
 scambench = pd.DataFrame(linhas_scambench)
 
 # 3) Exemplos brasileiros revisados — opcional
+# Se fornecida, a base local precisa ter colunas texto/rotulo antes de ser combinada.
 frames = [moz, scambench]
 if ARQUIVO_BRASILEIRO.exists():
     brasileiro_original = pd.read_csv(ARQUIVO_BRASILEIRO)
@@ -291,6 +295,7 @@ if ARQUIVO_BRASILEIRO.exists():
 else:
     print("CSV brasileiro não encontrado; treinamento seguirá com MOZ + ScamBench.")
 
+# Combina as fontes e remove textos vazios, curtos demais ou longos demais para o modelo.
 base = pd.concat(frames, ignore_index=True)
 base = base[base["texto"].str.len().between(5, 1500)].copy()
 base["texto_normalizado"] = base["texto"].map(texto_normalizado)
@@ -317,6 +322,7 @@ if base["label"].nunique() != 2:
 
 # %%
 # Divisão estratificada: 70% treino, 15% validação e 15% teste.
+# O teste fica isolado até a avaliação final; treino e validação orientam os pesos/parada.
 treino_validacao, teste = train_test_split(
     base,
     test_size=0.15,
@@ -348,6 +354,7 @@ assert set(validacao["texto_normalizado"]).isdisjoint(teste["texto_normalizado"]
 print("Splits sem duplicatas entre si.")
 
 # %%
+# Carrega o tokenizador oficial que converte cada mensagem em entradas numéricas para o BERT.
 tokenizer = AutoTokenizer.from_pretrained(MODELO_BASE, use_fast=True)
 
 
@@ -362,6 +369,7 @@ class DatasetMensagens(Dataset):
         return len(self.textos)
 
     def __getitem__(self, indice: int) -> dict[str, object]:
+        # A rotulagem acompanha os tokens para que o Trainer calcule a perda supervisionada.
         item = tokenizer(
             self.textos[indice],
             truncation=True,
@@ -387,6 +395,7 @@ print("Modelo base carregado:", MODELO_BASE)
 
 # %%
 def calcular_metricas(resultado) -> dict[str, float]:
+    """Calcula métricas gerais e específicas para a classe de smishing."""
     logits, labels = resultado
     previsoes = np.argmax(logits, axis=-1)
     precision_macro, recall_macro, f1_macro, _ = precision_recall_fscore_support(
@@ -421,6 +430,7 @@ print("Pesos [legitima, smishing]:", pesos_classes.tolist())
 
 
 class TrainerComPesos(Trainer):
+    """Trainer que pondera a perda conforme a frequência das duas classes."""
     def __init__(self, *args, class_weights: torch.Tensor, **kwargs):
         super().__init__(*args, **kwargs)
         self.class_weights = class_weights
@@ -432,6 +442,7 @@ class TrainerComPesos(Trainer):
         return_outputs=False,
         num_items_in_batch=None,
     ):
+        # Retira o rótulo dos argumentos do modelo e aplica entropia cruzada ponderada.
         labels = inputs.pop("labels")
         outputs = model(**inputs)
         funcao_perda = CrossEntropyLoss(weight=self.class_weights.to(outputs.logits.device))
@@ -440,6 +451,7 @@ class TrainerComPesos(Trainer):
 
 # %%
 # Compatibilidade com versões que usam eval_strategy ou evaluation_strategy.
+# Os demais parâmetros definem tamanho de lote, checkpoint, critério de seleção e reprodutibilidade.
 assinatura_argumentos = inspect.signature(TrainingArguments.__init__).parameters
 argumentos = {
     "output_dir": str(PASTA_CHECKPOINTS),
@@ -478,6 +490,7 @@ else:
 
 training_args = TrainingArguments(**argumentos)
 
+# Junta modelo, dados, métrica, parada antecipada e pesos para construir o treinador.
 parametros_trainer = {
     "model": model,
     "args": training_args,
@@ -500,11 +513,13 @@ trainer = TrainerComPesos(**parametros_trainer)
 print(training_args)
 
 # %%
+# Ajusta os pesos do modelo usando o conjunto de treino e acompanha a validação a cada época.
 # O tempo depende da GPU. Em uma T4, mantenha esta célula executando até concluir.
 resultado_treino = trainer.train()
 print(resultado_treino)
 
 # %%
+# Avalia uma única vez no conjunto de teste e compara previsões aos rótulos verdadeiros.
 resultado_teste = trainer.predict(dataset_teste)
 previsoes_teste = np.argmax(resultado_teste.predictions, axis=-1)
 labels_teste = resultado_teste.label_ids

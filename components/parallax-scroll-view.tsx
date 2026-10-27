@@ -13,6 +13,7 @@ import { useThemeColor } from '@/hooks/use-theme-color';
 
 const HEADER_HEIGHT = 250;
 
+// Define os elementos obrigatórios do cabeçalho e recebe o conteúdo rolável como filhos.
 type Props = PropsWithChildren<{
   headerImage: ReactElement;
   headerBackgroundColor: { dark: string; light: string };
@@ -23,8 +24,9 @@ export default function ParallaxScrollView({
   headerImage,
   headerBackgroundColor,
 }: Props) {
+  // O deslocamento da rolagem controla a posição e a escala do cabeçalho para criar o parallax.
   const backgroundColor = useThemeColor({}, 'background');
-  const colorScheme = useColorScheme() ?? 'light';
+  const colorScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const scrollOffset = useScrollOffset(scrollRef);
   const headerAnimatedStyle = useAnimatedStyle(() => {
@@ -66,6 +68,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  // Define a altura do cabeçalho e o espaçamento da área de conteúdo rolável.
   header: {
     height: HEADER_HEIGHT,
     overflow: 'hidden',
