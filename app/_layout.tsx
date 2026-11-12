@@ -9,7 +9,7 @@ export const unstable_settings = {
 
 // Layout global: fornece áreas seguras no celular e remove cabeçalhos nativos,
 // porque toda a navegação e os títulos são desenhados pelo próprio aplicativo.
-export default function RootLayout() {
+export default function LayoutRaiz() {
   return (
     <SafeAreaProvider>
       <Stack screenOptions={{ headerShown: false }}>

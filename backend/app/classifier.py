@@ -8,18 +8,18 @@ import torch
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 
-class BertimbauClassifier:
+class ClassificadorBertimbau:
     """Mantém tokenizer e modelo carregados uma única vez durante a vida da API."""
 
-    def __init__(self, model_path: Path, max_length: int = 160) -> None:
+    def __init__(self, caminho_modelo: Path, max_length: int = 160) -> None:
         # Garante que a pasta do modelo existe localmente antes de tentar carregar.
         # O modelo fica em models/bertimbau-smishing-v2/ na raiz do projeto.
-        if not model_path.is_dir():
-            raise FileNotFoundError(f"Pasta do modelo não encontrada: {model_path}")
+        if not caminho_modelo.is_dir():
+            raise FileNotFoundError(f"Pasta do modelo não encontrada: {caminho_modelo}")
 
         # Evita avisos de deadlock do tokenizador em ambientes com múltiplas threads.
         os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
-        self.model_path = model_path
+        self.caminho_modelo = caminho_modelo
         self.max_length = max_length
 
         # local_files_only=True impede downloads acidentais do Hugging Face Hub;
@@ -27,12 +27,12 @@ class BertimbauClassifier:
         # O tokenizer.json foi regenerado com AutoTokenizer para garantir compatibilidade
         # com a versão atual da biblioteca tokenizers (rodar backend/scripts/ se precisar refazer).
         self.tokenizer = AutoTokenizer.from_pretrained(
-            model_path,
+            caminho_modelo,
             local_files_only=True,
             use_fast=True,
         )
         self.model = AutoModelForSequenceClassification.from_pretrained(
-            model_path,
+            caminho_modelo,
             local_files_only=True,
         )
         self.model.eval()
@@ -47,32 +47,32 @@ class BertimbauClassifier:
 
         # Lê os rótulos do config.json para não depender de uma ordem fixa entre classes.
         label2id = {str(label).lower(): int(index) for label, index in self.model.config.label2id.items()}
-        self.legitimate_id = label2id.get("legitima", 0)
-        self.smishing_id = label2id.get("smishing", 1)
+        self.id_legitima = label2id.get("legitima", 0)
+        self.id_smishing = label2id.get("smishing", 1)
 
-    def predict(self, text: str) -> dict[str, float | str]:
+    def predict(self, texto: str) -> dict[str, float | str]:
         """Tokeniza uma mensagem e devolve as probabilidades brutas do modelo."""
         # Trunca entradas longas, move tensores para o dispositivo escolhido e calcula logits.
-        inputs = self.tokenizer(
-            text,
+        entradas = self.tokenizer(
+            texto,
             return_tensors="pt",
             truncation=True,
             max_length=self.max_length,
         )
-        inputs = {name: tensor.to(self.device) for name, tensor in inputs.items()}
+        entradas = {name: tensor.to(self.device) for name, tensor in entradas.items()}
 
         with self._lock, torch.inference_mode():
-            logits = self.model(**inputs).logits[0]
-            probabilities = torch.softmax(logits, dim=-1).cpu().tolist()
+            logits = self.model(**entradas).logits[0]
+            probabilidades = torch.softmax(logits, dim=-1).cpu().tolist()
 
-        smishing_probability = float(probabilities[self.smishing_id])
-        legitimate_probability = float(probabilities[self.legitimate_id])
+        probabilidade_smishing = float(probabilidades[self.id_smishing])
+        probabilidade_legitima = float(probabilidades[self.id_legitima])
         # Converte as probabilidades em rótulo e confiança para a API combinar com as heurísticas.
-        label = "smishing" if smishing_probability >= legitimate_probability else "legitima"
+        label = "smishing" if probabilidade_smishing >= probabilidade_legitima else "legitima"
 
         return {
             "label": label,
-            "smishing_probability": smishing_probability,
-            "legitimate_probability": legitimate_probability,
-            "confidence": max(smishing_probability, legitimate_probability),
+            "smishing_probability": probabilidade_smishing,
+            "legitimate_probability": probabilidade_legitima,
+            "confidence": max(probabilidade_smishing, probabilidade_legitima),
         }

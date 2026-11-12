@@ -202,26 +202,80 @@ curl -X POST http://localhost:8000/v1/predict \
 
 ## Estrutura do projeto
 
-```
+```text
 detector_golpes/
-├── app/                  # Rotas de entrada do Expo Router
-├── assets/               # Imagens, ícones e fontes
-├── backend/
-│   ├── app/
-│   │   ├── main.py       # Aplicação FastAPI (rotas e lifespan)
-│   │   ├── ocr.py        # OCR local para leitura de prints
-│   │   ├── classifier.py # Carregamento e inferência do BERTimbau
-│   │   ├── auth.py       # Autenticação Firebase (opcional em dev)
-│   │   └── risk.py       # Heurísticas e cálculo de risco combinado
-│   ├── requirements.txt  # Dependências Python
-│   └── Dockerfile        # Imagem para deploy em contêiner
-├── components/           # Componente raiz e estilos compartilhados
-├── src/                  # Telas, componentes, hooks e utilitários
-├── lib/                  # Utilitários (Firebase config, API client)
-├── models/               # Modelo BERTimbau (não versionado, .gitignore)
-├── training/             # Treinamento e avaliação do BERTimbau
-└── package.json          # Dependências Node e scripts
+├── app/                         # Rotas e layouts do Expo Router
+├── assets/images/               # Imagens e ícones do aplicativo
+├── src/
+│   ├── Aplicativo.tsx           # Navegação interna e conexão entre telas e hooks
+│   ├── componentes/             # Controles reutilizáveis e navegação inferior
+│   ├── estilos/                 # Paleta, temas e estilos das telas
+│   ├── hooks/                   # Estado da sessão, da análise e do tema
+│   ├── servicos/
+│   │   ├── classificador.ts     # Requisição HTTP e resposta da API
+│   │   └── firebase/            # Configuração, persistência, conta e histórico
+│   ├── telas/                   # Interface de cada etapa do aplicativo
+│   ├── tipos/                   # Tipos da navegação interna
+│   └── utilitarios/             # Formatação e validação
+├── backend/                     # FastAPI, inferência BERTimbau, OCR e testes
+└── training/                    # Treinamento e avaliação do modelo
 ```
+
+### Caminho de uma análise
+
+1. `app/(tabs)/index.tsx` monta `src/Aplicativo.tsx`. O aplicativo usa `useAutenticacao` para observar a sessão do Firebase e selecionar a tela.
+2. `TelaAnalise` passa o texto digitado a `alterarMensagem`. Ao tocar em Analisar risco, `iniciarAnalise` consulta a última resposta em memória do usuário, válida por 15 minutos.
+3. Quando não há resultado válido, `classificarMensagem` envia o texto e o token do Firebase para `POST /v1/predict`. O backend executa o BERTimbau e combina a saída do modelo com as regras de risco.
+4. `TelaResultado` mostra a resposta. Ao salvar, o serviço de histórico grava no Firestore. `TelaHistorico` lê a cópia local e acompanha as atualizações do Firestore.
+5. `TelaAprender` abre os guias externos pelo Expo Router.
+
+<details>
+<summary>Mapa dos arquivos movidos ou renomeados</summary>
+
+| Caminho anterior | Caminho atual |
+| --- | --- |
+| `components/detector-app.tsx` | `src/Aplicativo.tsx` |
+| `components/detector-app.styles.ts` | `src/estilos/aplicativo.ts` |
+| `lib/firebase-auth-persistence.native.ts` | `src/servicos/firebase/persistencia.native.ts` |
+| `lib/firebase-auth-persistence.ts` | `src/servicos/firebase/persistencia.ts` |
+| `lib/firebase-auth-persistence.web.ts` | `src/servicos/firebase/persistencia.web.ts` |
+| `lib/firebase.ts` | `src/servicos/firebase/configuracao.ts` |
+| `src/components/AppScreen.tsx` | `src/componentes/TelaBase.tsx` |
+| `lib/risk-classifier.ts` | `src/servicos/classificador.ts` |
+| `src/components/AuthButton.tsx` | `src/componentes/BotaoAutenticacao.tsx` |
+| `src/components/AuthFeedback.tsx` | `src/componentes/AvisoAutenticacao.tsx` |
+| `src/components/BackHeader.tsx` | `src/componentes/CabecalhoVoltar.tsx` |
+| `src/components/Entrance.tsx` | `src/componentes/EntradaAnimada.tsx` |
+| `src/components/BrandHeader.tsx` | `src/componentes/CabecalhoMarca.tsx` |
+| `src/components/index.ts` | `src/componentes/index.ts` |
+| `src/components/MotionPressable.tsx` | `src/componentes/BotaoAnimado.tsx` |
+| `src/components/FormField.tsx` | `src/componentes/CampoFormulario.tsx` |
+| `src/components/PasswordStrength.tsx` | `src/componentes/ForcaSenha.tsx` |
+| `src/components/PhoneFrame.tsx` | `src/componentes/MolduraTela.tsx` |
+| `src/hooks/useTheme.ts` | `src/hooks/useTema.ts` |
+| `src/components/RiskProgress.tsx` | `src/componentes/BarraRisco.tsx` |
+| `src/screens/AccountScreen.tsx` | `src/telas/TelaConta.tsx` |
+| `src/hooks/useAnalysis.ts` | `src/hooks/useAnalise.ts` |
+| `src/hooks/useAuth.ts` | `src/hooks/useAutenticacao.ts` |
+| `src/screens/AnalyzeScreen.tsx` | `src/telas/TelaAnalise.tsx` |
+| `src/screens/HistoryScreen.tsx` | `src/telas/TelaHistorico.tsx` |
+| `src/screens/historyHelpers.ts` | `src/telas/apresentacaoHistorico.ts` |
+| `src/screens/index.ts` | `src/telas/index.ts` |
+| `src/screens/HomeScreen.tsx` | `src/telas/TelaInicio.tsx` |
+| `src/screens/ProcessingScreen.tsx` | `src/telas/TelaProcessamento.tsx` |
+| `src/screens/ResultScreen.tsx` | `src/telas/TelaResultado.tsx` |
+| `src/utils/formatters.ts` | `src/utilitarios/formatacao.ts` |
+| `src/screens/SignupScreen.tsx` | `src/telas/TelaCadastro.tsx` |
+| `src/utils/validators.ts` | `src/utilitarios/validacao.ts` |
+| `src/screens/HistoryDetailScreen.tsx` | `src/telas/TelaDetalhesHistorico.tsx` |
+| `src/types/navigation.ts` | `src/tipos/navegacao.ts` |
+| `src/screens/LoginScreen.tsx` | `src/telas/TelaEntrada.tsx` |
+| `src/screens/LearnScreen.tsx` | `src/telas/TelaAprender.tsx` |
+| `lib/firebase-data.ts` | `src/servicos/firebase/conta.ts` |
+
+O histórico antes concentrado em `lib/firebase-data.ts` agora está em `src/servicos/firebase/historico.ts`.
+
+</details>
 
 ---
 

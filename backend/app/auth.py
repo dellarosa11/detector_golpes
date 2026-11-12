@@ -8,7 +8,7 @@ from fastapi import Header, HTTPException, status
 from firebase_admin import auth
 
 
-def _enabled(value: str | None, default: bool = False) -> bool:
+def _esta_ativado(value: str | None, default: bool = False) -> bool:
     """Converte variáveis de ambiente textuais em valores booleanos."""
     if value is None:
         return default
@@ -16,12 +16,12 @@ def _enabled(value: str | None, default: bool = False) -> bool:
 
 
 # Dependência do FastAPI: valida o token Firebase quando a autenticação está habilitada.
-def require_firebase_user(
+def verificar_usuario_firebase(
     authorization: Annotated[str | None, Header()] = None,
 ) -> dict[str, object] | None:
     """Valida o Bearer token em produção ou libera a chamada no ambiente local."""
-    require_auth = _enabled(os.getenv("REQUIRE_FIREBASE_AUTH"), default=True)
-    if not require_auth:
+    autenticacao_obrigatoria = _esta_ativado(os.getenv("REQUIRE_FIREBASE_AUTH"), default=True)
+    if not autenticacao_obrigatoria:
         return None
 
     if not authorization or not authorization.startswith("Bearer "):

@@ -1,7 +1,5 @@
-import DetectorApp from '@/components/detector-app';
+import Aplicativo from '@/src/Aplicativo';
 
-// Rota inicial do Expo Router. A experiência completa fica centralizada no
-// DetectorApp para preservar as transições animadas entre as telas do protótipo.
-export default function HomeScreen() {
-  return <DetectorApp />;
+export default function RotaInicial() {
+  return <Aplicativo />;
 }

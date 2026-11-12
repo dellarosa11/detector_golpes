@@ -12,15 +12,15 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
 
-from .auth import require_firebase_user
-from .classifier import BertimbauClassifier
-from .ocr import ImageTextExtractor
+from .auth import verificar_usuario_firebase
+from .classifier import ClassificadorBertimbau
+from .ocr import LeitorTextoImagem
 from .risk import (
-    combined_risk_probability,
-    normalize_url,
-    recommended_action,
-    risk_level,
-    warning_signals,
+    combinar_pontuacoes,
+    normalizar_url,
+    orientar_acao,
+    determinar_nivel_risco,
+    listar_sinais_de_alerta,
 )
 
 
@@ -28,12 +28,12 @@ from .risk import (
 # para apontar para outra versão sem alterar o código.
 # O modelo fica em models/bertimbau-smishing-v2/ na raiz do repositório.
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-MODEL_PATH = Path(os.getenv("MODEL_PATH", str(PROJECT_ROOT / "models" / "bertimbau-smishing-v2")))
-LOW_THRESHOLD = float(os.getenv("LOW_RISK_THRESHOLD", "0.35"))
-HIGH_THRESHOLD = float(os.getenv("HIGH_RISK_THRESHOLD", "0.70"))
-MAX_IMAGE_BYTES = int(os.getenv("MAX_IMAGE_BYTES", str(4 * 1024 * 1024)))
+CAMINHO_MODELO = Path(os.getenv("MODEL_PATH", str(PROJECT_ROOT / "models" / "bertimbau-smishing-v2")))
+LIMITE_BAIXO = float(os.getenv("LOW_RISK_THRESHOLD", "0.35"))
+LIMITE_ALTO = float(os.getenv("HIGH_RISK_THRESHOLD", "0.70"))
+LIMITE_BYTES_IMAGEM = int(os.getenv("MAX_IMAGE_BYTES", str(4 * 1024 * 1024)))
 
-if not 0 < LOW_THRESHOLD < HIGH_THRESHOLD < 1:
+if not 0 < LIMITE_BAIXO < LIMITE_ALTO < 1:
     raise ValueError("Os limites de risco devem obedecer 0 < baixo < alto < 1.")
 
 
@@ -44,7 +44,7 @@ class PredictionRequest(BaseModel):
 
     @field_validator("text")
     @classmethod
-    def clean_text(cls, value: str) -> str:
+    def normalizar_texto(cls, value: str) -> str:
         cleaned = " ".join(value.split())
         if not cleaned:
             raise ValueError("A mensagem não pode ficar vazia.")
@@ -79,8 +79,8 @@ async def lifespan(app: FastAPI):
     # Carrega o modelo e o OCR uma única vez na inicialização.
     # O lifespan garante que ambos ficam disponíveis durante toda a vida da API
     # e são liberados da memória ao desligar.
-    app.state.classifier = BertimbauClassifier(MODEL_PATH)
-    app.state.ocr = ImageTextExtractor()
+    app.state.classifier = ClassificadorBertimbau(CAMINHO_MODELO)
+    app.state.ocr = LeitorTextoImagem()
     yield
 
 
@@ -110,25 +110,25 @@ def health(request: Request) -> dict[str, str | bool]:
         "status": "ok" if classifier else "starting",
         "modelReady": bool(classifier),
         "ocrReady": bool(ocr),
-        "modelVersion": MODEL_PATH.name,
+        "modelVersion": CAMINHO_MODELO.name,
     }
 
 
-async def classify_text(
+async def classificar_texto(
     text: str,
-    analysis_type: Literal["message", "link", "image"],
+    tipo_analise: Literal["message", "link", "image"],
     request: Request,
 ) -> PredictionResponse:
     """Executa a classificação comum depois da validação ou extração do conteúdo."""
-    classifier: BertimbauClassifier = request.app.state.classifier
+    classifier: ClassificadorBertimbau = request.app.state.classifier
     prediction = await asyncio.to_thread(classifier.predict, text)
-    model_probability = float(prediction["smishing_probability"])
-    probability, heuristic_probability = combined_risk_probability(
-        model_probability,
+    probabilidade_modelo = float(prediction["smishing_probability"])
+    probability, pontuacao_heuristica = combinar_pontuacoes(
+        probabilidade_modelo,
         text,
-        analysis_type,
+        tipo_analise,
     )
-    level = risk_level(probability, LOW_THRESHOLD, HIGH_THRESHOLD)
+    level = determinar_nivel_risco(probability, LIMITE_BAIXO, LIMITE_ALTO)
     label = "smishing" if probability >= 0.5 else "legitima"
 
     return PredictionResponse(
@@ -137,17 +137,17 @@ async def classify_text(
         label=label,
         confidence=round(max(probability, 1 - probability), 6),
         fraudProbability=round(probability, 6),
-        modelFraudProbability=round(model_probability, 6),
-        heuristicScore=round(heuristic_probability, 6),
+        modelFraudProbability=round(probabilidade_modelo, 6),
+        heuristicScore=round(pontuacao_heuristica, 6),
         analysisMode="hybrid",
         probabilities={
             "legitima": round(1 - probability, 6),
             "smishing": round(probability, 6),
         },
-        warnings=warning_signals(text, level, analysis_type),
-        advice=recommended_action(level, analysis_type),
-        modelVersion=MODEL_PATH.name,
-        analysisType=analysis_type,
+        warnings=listar_sinais_de_alerta(text, level, tipo_analise),
+        advice=orientar_acao(level, tipo_analise),
+        modelVersion=CAMINHO_MODELO.name,
+        analysisType=tipo_analise,
         analyzedText=text,
     )
 
@@ -156,21 +156,21 @@ async def classify_text(
 async def predict(
     payload: PredictionRequest,
     request: Request,
-    _user: dict[str, object] | None = Depends(require_firebase_user),
+    _user: dict[str, object] | None = Depends(verificar_usuario_firebase),
 ) -> PredictionResponse:
     """Classifica fora da thread assíncrona e monta a análise híbrida explicável."""
     if payload.analysisType == "message" and len(payload.text) > 1500:
         raise HTTPException(status_code=422, detail="A mensagem deve possuir até 1.500 caracteres.")
 
     try:
-        text = normalize_url(payload.text) if payload.analysisType == "link" else payload.text
+        text = normalizar_url(payload.text) if payload.analysisType == "link" else payload.text
     except ValueError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
 
-    return await classify_text(text, payload.analysisType, request)
+    return await classificar_texto(text, payload.analysisType, request)
 
 
-def decode_image_data(image_data: str) -> bytes:
+def decodificar_imagem(image_data: str) -> bytes:
     """Valida formato e tamanho antes de entregar bytes não confiáveis ao OCR."""
     header, separator, encoded = image_data.partition(",")
     if not separator or header.lower() not in {
@@ -182,34 +182,34 @@ def decode_image_data(image_data: str) -> bytes:
         raise HTTPException(status_code=422, detail="Formato de imagem não suportado.")
 
     try:
-        image_bytes = base64.b64decode(encoded, validate=True)
+        bytes_imagem = base64.b64decode(encoded, validate=True)
     except (binascii.Error, ValueError) as error:
         raise HTTPException(status_code=422, detail="Os dados da imagem são inválidos.") from error
 
-    if not image_bytes or len(image_bytes) > MAX_IMAGE_BYTES:
+    if not bytes_imagem or len(bytes_imagem) > LIMITE_BYTES_IMAGEM:
         raise HTTPException(status_code=413, detail="A imagem ultrapassa o limite permitido.")
-    return image_bytes
+    return bytes_imagem
 
 
 @app.post("/v1/predict/image", response_model=PredictionResponse)
 async def predict_image(
     payload: ImagePredictionRequest,
     request: Request,
-    _user: dict[str, object] | None = Depends(require_firebase_user),
+    _user: dict[str, object] | None = Depends(verificar_usuario_firebase),
 ) -> PredictionResponse:
     """Extrai o texto do print localmente e o envia ao mesmo classificador de mensagens."""
-    image_bytes = decode_image_data(payload.imageData)
-    extractor: ImageTextExtractor = request.app.state.ocr
+    bytes_imagem = decodificar_imagem(payload.imageData)
+    extractor: LeitorTextoImagem = request.app.state.ocr
 
     try:
-        extracted_text = await asyncio.to_thread(extractor.extract, image_bytes)
+        texto_extraido = await asyncio.to_thread(extractor.extract, bytes_imagem)
     except Exception as error:
         raise HTTPException(status_code=422, detail="Não foi possível ler esta imagem.") from error
 
-    if len(extracted_text.strip()) < 3:
+    if len(texto_extraido.strip()) < 3:
         raise HTTPException(
             status_code=422,
             detail="Nenhum texto legível foi encontrado na imagem.",
         )
 
-    return await classify_text(extracted_text[:1500], "image", request)
+    return await classificar_texto(texto_extraido[:1500], "image", request)

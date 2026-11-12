@@ -7,21 +7,21 @@ from PIL import Image, ImageOps
 from rapidocr import RapidOCR
 
 
-class ImageTextExtractor:
+class LeitorTextoImagem:
     """Mantém os modelos do RapidOCR carregados para reutilizá-los entre requisições."""
 
     def __init__(self) -> None:
         self._engine = RapidOCR()
 
-    def extract(self, image_bytes: bytes) -> str:
+    def extract(self, bytes_imagem: bytes) -> str:
         """Corrige rotação, limita resolução e devolve somente linhas com confiança útil."""
         # Corrige a orientação da foto e reduz imagens enormes antes de convertê-las para o OCR.
-        with Image.open(BytesIO(image_bytes)) as source:
+        with Image.open(BytesIO(bytes_imagem)) as source:
             image = ImageOps.exif_transpose(source).convert("RGB")
             image.thumbnail((2200, 2200))
-            image_array = np.asarray(image)
+            matriz_imagem = np.asarray(image)
 
-        result = self._engine(image_array)
+        result = self._engine(matriz_imagem)
         texts = getattr(result, "txts", None)
         scores = getattr(result, "scores", None)
 
@@ -35,11 +35,11 @@ class ImageTextExtractor:
             return ""
 
         # Descarta linhas vazias ou com baixa confiança e junta o texto na ordem fornecida pelo OCR.
-        clean_lines: list[str] = []
+        linhas_limpas: list[str] = []
         for index, value in enumerate(texts):
             score = float(scores[index]) if scores is not None and index < len(scores) else 1.0
             cleaned = " ".join(str(value).split())
             if cleaned and score >= 0.35:
-                clean_lines.append(cleaned)
+                linhas_limpas.append(cleaned)
 
-        return "\n".join(clean_lines).strip()
+        return "\n".join(linhas_limpas).strip()
