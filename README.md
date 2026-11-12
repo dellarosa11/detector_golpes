@@ -1,6 +1,6 @@
 # Detector de Golpes
 
-Aplicativo mobile (Expo/React Native) que analisa mensagens, links e prints para identificar possíveis golpes usando BERTimbau, regras explicáveis e OCR local.
+Aplicativo mobile (Expo/React Native) que analisa mensagens para identificar possíveis golpes usando BERTimbau e regras explicáveis.
 
 ## Arquitetura
 
@@ -204,7 +204,7 @@ curl -X POST http://localhost:8000/v1/predict \
 
 ```
 detector_golpes/
-├── app/                  # Telas do app (Expo Router, file-based routing)
+├── app/                  # Rotas de entrada do Expo Router
 ├── assets/               # Imagens, ícones e fontes
 ├── backend/
 │   ├── app/
@@ -215,13 +215,11 @@ detector_golpes/
 │   │   └── risk.py       # Heurísticas e cálculo de risco combinado
 │   ├── requirements.txt  # Dependências Python
 │   └── Dockerfile        # Imagem para deploy em contêiner
-├── components/           # Componentes React Native reutilizáveis
-├── constants/            # Cores, temas e constantes do app
-├── hooks/                # Custom hooks React
+├── components/           # Componente raiz e estilos compartilhados
+├── src/                  # Telas, componentes, hooks e utilitários
 ├── lib/                  # Utilitários (Firebase config, API client)
 ├── models/               # Modelo BERTimbau (não versionado, .gitignore)
-├── .env.example          # Template de variáveis do app Expo
-├── backend/.env.example  # Template de variáveis da API
+├── training/             # Treinamento e avaliação do BERTimbau
 └── package.json          # Dependências Node e scripts
 ```
 

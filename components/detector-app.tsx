@@ -26,7 +26,7 @@ import { styles } from './detector-app.styles';
 export default function DetectorApp() {
   const [screen, setScreen] = useState<ScreenName>('login');
 
-  const { themePreference, changeTheme } = useTheme();
+  useTheme();
   const { user } = useAuth({ setScreen });
   const {
     analysisMessage,
@@ -58,12 +58,11 @@ export default function DetectorApp() {
       );
       break;
     case 'processing':
-      content = <ProcessingScreen analysisType="message" />;
+      content = <ProcessingScreen />;
       break;
     case 'result':
       content = analysisResult ? (
         <ResultScreen
-          analysisType="message"
           navigate={setScreen}
           message={analysisResult.analyzedText || analysisMessage}
           result={analysisResult}
@@ -86,14 +85,7 @@ export default function DetectorApp() {
       content = <LearnScreen navigate={setScreen} />;
       break;
     case 'account':
-      content = (
-        <AccountScreen
-          navigate={setScreen}
-          onChangeTheme={changeTheme}
-          themePreference={themePreference}
-          user={user}
-        />
-      );
+      content = <AccountScreen navigate={setScreen} user={user} />;
       break;
     case 'login':
     default:

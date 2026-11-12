@@ -15,13 +15,6 @@ export default function TabLayout() {
           title: 'Detector de Golpes',
         }}
       />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          // Rota do template original mantida fora da navegação visível.
-          href: null,
-        }}
-      />
     </Tabs>
   );
 }

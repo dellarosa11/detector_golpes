@@ -11,7 +11,6 @@ export { AnalyzeScreen } from './AnalyzeScreen';
 export type { AnalyzeScreenProps } from './AnalyzeScreen';
 
 export { ProcessingScreen } from './ProcessingScreen';
-export type { ProcessingScreenProps } from './ProcessingScreen';
 
 export { ResultScreen } from './ResultScreen';
 export type { ResultScreenProps } from './ResultScreen';

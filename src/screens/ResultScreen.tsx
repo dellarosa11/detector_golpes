@@ -3,14 +3,13 @@ import React, { useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 
 import { palette, riskPresentation, styles } from '@/components/detector-app.styles';
-import { firebaseErrorMessage, saveAnalysis, type AnalysisType } from '@/lib/firebase-data';
+import { firebaseErrorMessage, saveAnalysis } from '@/lib/firebase-data';
 import type { RiskAnalysis } from '@/lib/risk-classifier';
 import { AppScreen, BackHeader, Entrance, MotionPressable, RiskProgress } from '@/src/components';
 import type { Navigate } from '@/src/types/navigation';
 
 export type ResultScreenProps = {
   navigate: Navigate;
-  analysisType: AnalysisType;
   message: string;
   result: RiskAnalysis;
   userId?: string;
@@ -21,7 +20,6 @@ export type ResultScreenProps = {
  */
 export function ResultScreen({
   navigate,
-  analysisType,
   message,
   result,
   userId,
@@ -40,19 +38,13 @@ export function ResultScreen({
     setSaving(true);
     try {
       const cleanMessage = message.trim().replace(/\s+/g, ' ');
-      const fallbackTitle =
-        analysisType === 'image'
-          ? 'Imagem analisada'
-          : analysisType === 'link'
-            ? 'Link analisado'
-            : 'Mensagem analisada';
       await saveAnalysis(userId, {
-        title: cleanMessage ? cleanMessage.slice(0, 44) : fallbackTitle,
+        title: cleanMessage ? cleanMessage.slice(0, 44) : 'Mensagem analisada',
         message: message.trim(),
         risk: Math.round(Math.max(0, Math.min(100, result.riskScore))),
         level: presentation.title,
         tone: presentation.tone,
-        analysisType,
+        analysisType: 'message',
         warnings: result.warnings.slice(0, 8),
         advice: result.advice.slice(0, 1200),
         modelVersion: (result.modelVersion || 'não informada').slice(0, 120),
@@ -106,33 +98,9 @@ export function ResultScreen({
           </View>
         </Entrance>
 
-        {analysisType !== 'message' ? (
-          <Entrance delay={150}>
-            <View style={styles.resultSourceCard}>
-              <View style={styles.resultSourceTitleRow}>
-                <Ionicons
-                  name={analysisType === 'image' ? 'scan-outline' : 'link-outline'}
-                  size={16}
-                  color={palette.green}
-                />
-                <Text style={styles.resultSourceTitle}>
-                  {analysisType === 'image' ? 'Texto identificado na imagem' : 'Endereço analisado'}
-                </Text>
-              </View>
-              <Text numberOfLines={analysisType === 'image' ? 6 : 3} style={styles.resultSourceText}>
-                {message}
-              </Text>
-            </View>
-          </Entrance>
-        ) : null}
-
         <Entrance delay={180}>
           <Text style={styles.resultSectionTitle}>
-            {analysisType === 'image'
-              ? 'Sinais observados no texto da imagem'
-              : analysisType === 'link'
-                ? 'Sinais observados no endereço'
-                : 'Sinais observados na mensagem'}
+            Sinais observados na mensagem
           </Text>
         </Entrance>
         <View style={styles.warningList}>

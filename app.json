@@ -30,14 +30,6 @@
     "plugins": [
       "expo-router",
       [
-        "expo-image-picker",
-        {
-          "photosPermission": "Permita que o Detector de Golpes acesse suas fotos para escolher uma imagem de perfil.",
-          "cameraPermission": "Permita que o Detector de Golpes use a câmera para fotografar mensagens suspeitas.",
-          "microphonePermission": false
-        }
-      ],
-      [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
@@ -51,8 +43,7 @@
       ],
       "expo-font",
       "expo-image",
-      "expo-status-bar",
-      "expo-web-browser"
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true

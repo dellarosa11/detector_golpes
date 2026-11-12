@@ -13,17 +13,12 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { palette, styles } from '@/components/detector-app.styles';
-import type { AnalysisType } from '@/lib/firebase-data';
 import { AppScreen, Entrance } from '@/src/components';
-
-export type ProcessingScreenProps = {
-  analysisType: AnalysisType;
-};
 
 /**
  * Feedback visual exibido enquanto a requisição real aguarda a resposta do BERTimbau.
  */
-export function ProcessingScreen({ analysisType }: ProcessingScreenProps) {
+export function ProcessingScreen() {
   const reducedMotion = useReducedMotion();
   const pulse = useSharedValue(1);
   const rotation = useSharedValue(0);
@@ -61,15 +56,9 @@ export function ProcessingScreen({ analysisType }: ProcessingScreenProps) {
     transform: [{ rotate: `${rotation.value * 360}deg` }],
   }));
 
-  const firstChecks =
-    analysisType === 'image'
-      ? ['Preparação da imagem', 'Leitura do texto com OCR']
-      : analysisType === 'link'
-        ? ['Validação do endereço', 'Estrutura do domínio']
-        : ['Preparação do texto', 'Tokenização em português'];
   const checks = [
-    { icon: '✓', label: firstChecks[0], status: 'Concluído', color: palette.greenSuccess },
-    { icon: '✓', label: firstChecks[1], status: 'Concluído', color: palette.greenSuccess },
+    { icon: '✓', label: 'Preparação do texto', status: 'Concluído', color: palette.greenSuccess },
+    { icon: '✓', label: 'Tokenização em português', status: 'Concluído', color: palette.greenSuccess },
     { icon: '•', label: 'Padrões de fraude', status: 'Analisando…', color: palette.green },
     { icon: '○', label: 'Classificação de risco', status: 'Aguardando', color: palette.muted },
   ];

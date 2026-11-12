@@ -19,14 +19,12 @@ import {
   collection,
   deleteDoc,
   doc,
-  getDoc,
   getDocs,
   limit,
   onSnapshot,
   orderBy,
   query,
   serverTimestamp,
-  setDoc,
   writeBatch,
 } from 'firebase/firestore';
 
@@ -180,55 +178,9 @@ export async function logout() {
   return signOut(auth);
 }
 
-export async function updateAccountName(name: string) {
-  const { auth } = getFirebaseServices();
-  if (!auth.currentUser) throw new Error('auth/no-current-user');
-  await updateProfile(auth.currentUser, { displayName: name.trim() });
-  return auth.currentUser;
-}
-
-// Centraliza o caminho do documento da foto para leitura, atualização e remoção.
+// Localiza fotos de perfil legadas para a exclusão da conta.
 function accountPhotoReference(db: ReturnType<typeof getFirebaseServices>['db'], userId: string) {
   return doc(db, 'users', userId, 'profile', 'avatar');
-}
-
-export async function getAccountPhoto() {
-  const { auth, db } = getFirebaseServices();
-  const user = auth.currentUser;
-  if (!user) throw new Error('auth/no-current-user');
-
-  const snapshot = await getDoc(accountPhotoReference(db, user.uid));
-  const imageData = snapshot.data()?.imageData;
-  return typeof imageData === 'string' && imageData.startsWith('data:image/jpeg;base64,')
-    ? imageData
-    : '';
-}
-
-export async function updateAccountPhoto(imageData: string) {
-  const { auth, db } = getFirebaseServices();
-  const user = auth.currentUser;
-  if (!user) throw new Error('auth/no-current-user');
-  if (!imageData.startsWith('data:image/jpeg;base64,')) {
-    throw new Error('profile/image-unavailable');
-  }
-  if (imageData.length > 200_000) throw new Error('profile/image-too-large');
-
-  await setDoc(accountPhotoReference(db, user.uid), {
-    imageData,
-    updatedAt: serverTimestamp(),
-  });
-  // Fotos antigas salvas no Auth deixam de ser usadas após a migração para o Firestore.
-  if (user.photoURL) await updateProfile(user, { photoURL: null });
-  return imageData;
-}
-
-export async function removeAccountPhoto() {
-  const { auth, db } = getFirebaseServices();
-  const user = auth.currentUser;
-  if (!user) throw new Error('auth/no-current-user');
-
-  await deleteDoc(accountPhotoReference(db, user.uid));
-  if (user.photoURL) await updateProfile(user, { photoURL: null });
 }
 
 export async function sendAccountVerification() {
@@ -357,8 +309,6 @@ export function firebaseErrorMessage(error: unknown) {
     'auth/no-current-user': 'Sua sessão não está mais disponível. Entre novamente.',
     'auth/missing-email': 'Esta conta não possui um e-mail válido.',
     'auth/email-verification-unavailable': 'Contas de visitante não possuem verificação de e-mail.',
-    'profile/image-unavailable': 'Não foi possível abrir a imagem escolhida.',
-    'profile/image-too-large': 'Não foi possível reduzir a foto ao tamanho permitido.',
     'permission-denied': 'O Firebase recusou o acesso. Verifique as regras do Firestore.',
   };
 

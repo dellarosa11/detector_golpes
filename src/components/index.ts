@@ -30,6 +30,3 @@ export type { BackHeaderProps } from './BackHeader';
 
 export { RiskProgress } from './RiskProgress';
 export type { RiskProgressProps } from './RiskProgress';
-
-export { EmptyState } from './EmptyState';
-export type { EmptyStateProps } from './EmptyState';

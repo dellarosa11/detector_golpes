@@ -1,4 +1,4 @@
-import { palette } from '@/src/theme';
+import { palette } from '@/components/detector-app.styles';
 
 export const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
