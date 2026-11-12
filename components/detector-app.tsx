@@ -30,16 +30,11 @@ export default function DetectorApp() {
   const { user } = useAuth({ setScreen });
   const {
     analysisMessage,
-    analysisType,
-    analysisImage,
     analysisResult,
     analysisError,
     startAnalysis,
     openAnalyzer,
-    changeAnalysisType,
     changeAnalysisMessage,
-    chooseAnalysisImage,
-    removeAnalysisImage,
   } = useAnalysis({ user, setScreen });
 
   let content: React.ReactNode;
@@ -55,26 +50,21 @@ export default function DetectorApp() {
       content = (
         <AnalyzeScreen
           navigate={setScreen}
-          analysisType={analysisType}
-          image={analysisImage}
           message={analysisMessage}
-          onChangeType={changeAnalysisType}
           onChangeMessage={changeAnalysisMessage}
-          onChooseImage={chooseAnalysisImage}
-          onRemoveImage={removeAnalysisImage}
           onAnalyze={startAnalysis}
           error={analysisError}
         />
       );
       break;
     case 'processing':
-      content = <ProcessingScreen analysisType={analysisType} />;
+      content = <ProcessingScreen analysisType="message" />;
       break;
     case 'result':
       content = analysisResult ? (
         <ResultScreen
+          analysisType="message"
           navigate={setScreen}
-          analysisType={analysisType}
           message={analysisResult.analyzedText || analysisMessage}
           result={analysisResult}
           userId={user?.uid}
@@ -82,13 +72,8 @@ export default function DetectorApp() {
       ) : (
         <AnalyzeScreen
           navigate={setScreen}
-          analysisType={analysisType}
-          image={analysisImage}
           message={analysisMessage}
-          onChangeType={changeAnalysisType}
           onChangeMessage={changeAnalysisMessage}
-          onChooseImage={chooseAnalysisImage}
-          onRemoveImage={removeAnalysisImage}
           onAnalyze={startAnalysis}
           error={analysisError}
         />
