@@ -18,10 +18,10 @@ Aplicativo mobile (Expo/React Native) que analisa mensagens para identificar pos
 
 ## Pré-requisitos
 
-| Ferramenta | Versão mínima |
+| Ferramenta | Versão mínima / recomendada |
 |---|---|
-| [Node.js](https://nodejs.org/) | 18+ |
-| [Python](https://www.python.org/) | 3.12+ |
+| [Node.js](https://nodejs.org/) | 18+ (testado nas versões 20 e 24) |
+| [Python](https://www.python.org/) | 3.12 (recomendado para compatibilidade com PyTorch) |
 | [Expo CLI](https://docs.expo.dev/get-started/installation/) | via `npx expo` |
 | [Git](https://git-scm.com/) | qualquer |
 
@@ -36,14 +36,15 @@ cd detector_golpes
 
 ### 2. Configure as variáveis de ambiente
 
-Copie os exemplos e preencha com suas credenciais Firebase:
+Copie os arquivos de exemplo para criar suas configurações locais:
 
 ```bash
+# Na raiz do projeto
 cp .env.example .env.local
 cp backend/.env.example backend/.env.local
 ```
 
-Edite o `.env.local` da raiz com as credenciais do seu projeto Firebase:
+Edite o `.env.local` da raiz com as credenciais do seu projeto Firebase e o endereço da API:
 
 ```env
 EXPO_PUBLIC_FIREBASE_API_KEY=sua_api_key
@@ -52,10 +53,18 @@ EXPO_PUBLIC_FIREBASE_PROJECT_ID=seu-projeto
 EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=seu-projeto.firebasestorage.app
 EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=000000000000
 EXPO_PUBLIC_FIREBASE_APP_ID=1:000000000000:web:xxxxxxxxxxxxxxxxxxxxxx
-EXPO_PUBLIC_CLASSIFIER_API_URL=http://<IP_DA_SUA_MAQUINA>:8000
+
+# Endereço da API do classificador:
+# - Para testes no navegador web (npm run web): http://localhost:8000
+# - Para testes no celular físico na mesma rede Wi-Fi: http://<IP_DO_COMPUTADOR>:8000
+EXPO_PUBLIC_CLASSIFIER_API_URL=http://localhost:8000
 ```
 
-> **Importante:** Em `EXPO_PUBLIC_CLASSIFIER_API_URL`, use o **IP local da sua máquina na rede Wi-Fi** (ex: `http://192.168.100.46:8000`), não `localhost`, para que o celular consiga acessar a API.
+> **Dica Firebase:** O projeto possui um script para testar e validar suas credenciais de autenticação e conexão com o Firestore:
+> ```bash
+> npm run test:firebase
+> ```
+> Consulte também o arquivo [FIREBASE_SETUP.md](FIREBASE_SETUP.md) para o passo a passo de ativação no console do Firebase.
 
 ### 3. Instale as dependências do app
 
@@ -70,11 +79,14 @@ cd backend
 python -m venv .venv
 ```
 
-Ative o ambiente virtual:
-
 **Windows (PowerShell):**
 ```powershell
+cd backend
+py -3.12 -m venv .venv
+# ou: python -m venv .venv (se o python padrão for 3.12)
 .\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+cd ..
 ```
 
 **Windows (CMD):**
@@ -84,18 +96,17 @@ Ative o ambiente virtual:
 
 **Linux/macOS:**
 ```bash
+cd backend
+python3.12 -m venv .venv
+# ou: python3 -m venv .venv
 source .venv/bin/activate
-```
-
-Instale as dependências Python:
-
-```bash
 pip install -r requirements.txt
+cd ..
 ```
 
 ### 5. Modelo BERTimbau
 
-O modelo treinado (~436 MB) **não está incluído no repositório**. Coloque os arquivos do modelo na pasta `models/bertimbau-smishing-v2/` na raiz do projeto:
+O modelo neural pré-treinado (~436 MB) **não está incluído no repositório**. Quando disponível, coloque os arquivos na pasta `models/bertimbau-smishing-v2/` na raiz do projeto:
 
 ```
 models/
@@ -106,11 +117,15 @@ models/
     └── tokenizer_config.json
 ```
 
-> Se o modelo estiver disponível no Hugging Face Hub, baixe com:
+> **Modo de desenvolvimento (Fallback):** Caso a pasta do modelo não contenha os pesos treinados, a API inicializa automaticamente em modo heurístico/regras explicáveis para desenvolvimento e testes, permitindo testar o fluxo de autenticação e classificação no app sem bloqueios.
+>
+> Se o modelo estiver disponível no Hugging Face Hub (privado ou público), você pode baixá-lo via script Python ou CLI com seu Read Token:
 > ```bash
 > pip install huggingface_hub
-> hf download dellarosa11/bertimbau-smishing-v2 --local-dir models/bertimbau-smishing-v2
+> huggingface-cli login
+> huggingface-cli download dellarosa11/bertimbau-smishing-v2 --local-dir models/bertimbau-smishing-v2
 > ```
+> O comando de login pede um token com acesso de leitura; não o inclua em arquivos do projeto.
 
 ---
 
@@ -120,16 +135,20 @@ Você precisa de **dois terminais** abertos simultaneamente: um para a API e out
 
 ### Terminal 1 — API (FastAPI + Uvicorn)
 
-Na raiz do projeto:
+Na raiz do projeto, execute o script gerenciador que detecta o ambiente virtual automaticamente:
 
 ```bash
 npm run api
 ```
 
-Ou manualmente (com o venv ativado):
+Ou manualmente (a partir da raiz):
 
 ```bash
-python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --env-file backend/.env.local
+# Windows
+.\backend\.venv\Scripts\python.exe -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --env-file backend/.env.local
+
+# Linux/macOS
+./backend/.venv/bin/python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --env-file backend/.env.local
 ```
 
 A API estará disponível em `http://localhost:8000`. Verifique com:
@@ -143,12 +162,19 @@ Resposta esperada:
 {
   "status": "ok",
   "modelReady": true,
+  "ocrReady": true,
   "modelVersion": "bertimbau-smishing-v2"
 }
 ```
 
 ### Terminal 2 — App Expo
 
+Para testar no navegador (Web):
+```bash
+npm run web
+```
+
+Ou para iniciar o servidor Expo geral (Celular / Emuladores):
 ```bash
 npx expo start
 ```
@@ -283,8 +309,8 @@ O histórico antes concentrado em `lib/firebase-data.ts` agora está em `src/ser
 
 ### App Expo (`.env.local` na raiz)
 
-| Variável | Descrição |
-|---|---|
+| Variável  | Descrição |
+|-----------|-----------|
 | `EXPO_PUBLIC_FIREBASE_API_KEY` | Chave da API do Firebase |
 | `EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN` | Domínio de autenticação |
 | `EXPO_PUBLIC_FIREBASE_PROJECT_ID` | ID do projeto Firebase |
@@ -295,8 +321,8 @@ O histórico antes concentrado em `lib/firebase-data.ts` agora está em `src/ser
 
 ### API Python (`backend/.env.local`)
 
-| Variável | Padrão | Descrição |
-|---|---|---|
+| Variável  |  Padrão   | Descrição |
+|-----------|-----------|-----------|
 | `MODEL_PATH` | `models/bertimbau-smishing-v2` | Caminho para a pasta do modelo |
 | `LOW_RISK_THRESHOLD` | `0.35` | Limite inferior de risco |
 | `HIGH_RISK_THRESHOLD` | `0.70` | Limite superior de risco |

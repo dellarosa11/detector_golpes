@@ -22,7 +22,7 @@ training
 data
 
 # Ambientes locais e caches do Python aumentariam muito a imagem.
-backend/.venv
+backend/.venv*
 **/__pycache__
 *.py[cod]
 .env*

@@ -95,8 +95,16 @@ backend/
 
 Para rodar via contêiner:
 
-```bash
-# Da raiz do projeto
-docker build -f backend/Dockerfile -t detector-golpes-api .
+```powershell
+# Da raiz do projeto; informe um token Hugging Face com acesso de leitura ao modelo privado.
+$secureToken = Read-Host "Hugging Face read token" -AsSecureString
+$env:HF_TOKEN = [System.Net.NetworkCredential]::new("", $secureToken).Password
+try {
+    docker build --secret id=hf_token,env=HF_TOKEN -f backend/Dockerfile -t detector-golpes-api .
+} finally {
+    Remove-Item Env:HF_TOKEN -ErrorAction SilentlyContinue
+    Remove-Variable secureToken
+}
+
 docker run -p 8000:10000 -e REQUIRE_FIREBASE_AUTH=false detector-golpes-api
 ```

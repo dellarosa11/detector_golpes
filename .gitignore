@@ -47,7 +47,7 @@ app-example
 
 # Local AI model and Python environment
 /models/
-/backend/.venv/
+/backend/.venv*/
 /backend/__pycache__/
 **/__pycache__/
 *.py[cod]

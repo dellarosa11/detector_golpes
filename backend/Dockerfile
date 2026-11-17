@@ -15,7 +15,8 @@ RUN pip install --no-cache-dir -r requirements.txt huggingface_hub[cli]
 
 # Baixa o modelo do Hugging Face Hub durante o build (evita incluir ~436MB no git).
 ARG HF_MODEL_REPO=dellarosa11/bertimbau-smishing-v2
-RUN hf download ${HF_MODEL_REPO} --local-dir ./model
+RUN --mount=type=secret,id=hf_token,required=true \
+    hf download ${HF_MODEL_REPO} --local-dir ./model --token "$(cat /run/secrets/hf_token)"
 
 # A partir daqui o contêiner opera 100% offline.
 ENV TRANSFORMERS_OFFLINE=1

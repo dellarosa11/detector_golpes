@@ -91,7 +91,7 @@ export function mensagemErroClassificador(erro: unknown) {
   const mensagens: Record<string, string> = {
     'classifier/not-configured': 'A API de análise ainda não foi configurada neste aparelho.',
     'classifier/unauthorized': 'Sua sessão expirou. Entre novamente para analisar a mensagem.',
-    'classifier/invalid-message': 'Digite uma mensagem válida com até 1.500 caracteres.',
+    'classifier/invalid-message': 'Digite uma mensagem válida com até 5.000 caracteres.',
     'classifier/invalid-response': 'A API respondeu em um formato inesperado.',
     'classifier/timeout': 'A análise demorou mais que o esperado. Tente novamente.',
   };

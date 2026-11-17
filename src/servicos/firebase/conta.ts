@@ -104,6 +104,10 @@ export async function excluirContaEHistorico(senha?: string) {
 // Converte códigos do Firebase Auth e Firestore em mensagens úteis para a interface.
 export function mensagemErroFirebase(erro: unknown) {
   // Traduz códigos técnicos do SDK em mensagens curtas para quem está usando o aplicativo.
+  if (__DEV__) {
+    console.warn('[Firebase Auth Error]', erro);
+  }
+
   const codigo =
     typeof erro === 'object' && erro && 'code' in erro
       ? String(erro.code)
@@ -113,6 +117,9 @@ export function mensagemErroFirebase(erro: unknown) {
 
   const mensagens: Record<string, string> = {
     'firebase/not-configured': 'O Firebase ainda não foi configurado neste aplicativo.',
+    'auth/configuration-not-found': 'A autenticação ainda não foi ativada no console do Firebase.',
+    'auth/api-key-not-valid': 'Chave do Firebase inválida. Verifique o arquivo .env.local.',
+    'auth/invalid-api-key': 'Chave do Firebase inválida. Verifique o arquivo .env.local.',
     'auth/email-already-in-use': 'Este e-mail já possui uma conta.',
     'auth/invalid-credential': 'E-mail ou senha incorretos.',
     'auth/invalid-email': 'Digite um endereço de e-mail válido.',

@@ -22,7 +22,7 @@ service cloud.firestore {
         && data.title.size() <= 80
         && data.message is string
         && data.message.size() > 0
-        && data.message.size() <= 1500
+        && data.message.size() <= 5000
         && data.risk is number
         && data.risk >= 0
         && data.risk <= 100

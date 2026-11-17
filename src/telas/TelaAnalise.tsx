@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ScrollView, Text, TextInput, View } from 'react-native';
 
-import { paleta, estilos } from '@/src/estilos/aplicativo';
-import { TelaBase, CabecalhoVoltar, EntradaAnimada, BotaoAnimado } from '@/src/componentes';
+import { BotaoAnimado, CabecalhoVoltar, EntradaAnimada, TelaBase } from '@/src/componentes';
+import { estilos, paleta } from '@/src/estilos/aplicativo';
 import type { Navegar } from '@/src/tipos/navegacao';
 
 export type PropriedadesTelaAnalise = {
@@ -44,7 +44,7 @@ export function TelaAnalise({
           <View style={[estilos.messageBox, mensagemEmFoco && estilos.messageBoxFocused]}>
             <TextInput
               accessibilityLabel="Mensagem recebida"
-              maxLength={1500}
+              maxLength={5000}
               multiline
               onBlur={() => definirFocoMensagem(false)}
               onChangeText={aoAlterarMensagem}
@@ -57,7 +57,7 @@ export function TelaAnalise({
               value={mensagem}
             />
             <Text style={[estilos.characterCount, mensagemEmFoco && estilos.characterCountFocused]}>
-              {mensagem.length} / 1500 caracteres
+              {mensagem.length} / 5000 caracteres
             </Text>
           </View>
         </EntradaAnimada>

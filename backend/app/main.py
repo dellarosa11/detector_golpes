@@ -29,6 +29,8 @@ from .risk import (
 # O modelo fica em models/bertimbau-smishing-v2/ na raiz do repositório.
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 CAMINHO_MODELO = Path(os.getenv("MODEL_PATH", str(PROJECT_ROOT / "models" / "bertimbau-smishing-v2")))
+LIMITE_CARACTERES_MENSAGEM = 5000
+LIMITE_CARACTERES_LINK = 2048
 LIMITE_BAIXO = float(os.getenv("LOW_RISK_THRESHOLD", "0.35"))
 LIMITE_ALTO = float(os.getenv("HIGH_RISK_THRESHOLD", "0.70"))
 LIMITE_BYTES_IMAGEM = int(os.getenv("MAX_IMAGE_BYTES", str(4 * 1024 * 1024)))
@@ -39,7 +41,7 @@ if not 0 < LIMITE_BAIXO < LIMITE_ALTO < 1:
 
 class PredictionRequest(BaseModel):
     """Entrada textual usada para mensagens ou endereços web."""
-    text: str = Field(min_length=1, max_length=2048)
+    text: str = Field(min_length=1, max_length=LIMITE_CARACTERES_MENSAGEM)
     analysisType: Literal["message", "link"] = "message"
 
     @field_validator("text")
@@ -159,8 +161,11 @@ async def predict(
     _user: dict[str, object] | None = Depends(verificar_usuario_firebase),
 ) -> PredictionResponse:
     """Classifica fora da thread assíncrona e monta a análise híbrida explicável."""
-    if payload.analysisType == "message" and len(payload.text) > 1500:
-        raise HTTPException(status_code=422, detail="A mensagem deve possuir até 1.500 caracteres.")
+    if payload.analysisType == "link" and len(payload.text) > LIMITE_CARACTERES_LINK:
+        raise HTTPException(
+            status_code=422,
+            detail=f"O link deve possuir até {LIMITE_CARACTERES_LINK:,} caracteres.",
+        )
 
     try:
         text = normalizar_url(payload.text) if payload.analysisType == "link" else payload.text
@@ -212,4 +217,4 @@ async def predict_image(
             detail="Nenhum texto legível foi encontrado na imagem.",
         )
 
-    return await classificar_texto(texto_extraido[:1500], "image", request)
+    return await classificar_texto(texto_extraido[:LIMITE_CARACTERES_MENSAGEM], "image", request)
