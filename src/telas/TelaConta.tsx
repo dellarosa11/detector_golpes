@@ -4,16 +4,16 @@ import type { User as UsuarioFirebase } from 'firebase/auth';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
-import { paleta, estilos } from '@/src/estilos/aplicativo';
+import { AvisoAutenticacao, BotaoAnimado, EntradaAnimada, TelaBase } from '@/src/componentes';
+import { estilos, paleta } from '@/src/estilos/aplicativo';
 import {
+  enviarVerificacaoEmail,
   excluirContaEHistorico,
   mensagemErroFirebase,
-  sairDaConta,
   recarregarConta,
+  sairDaConta,
   solicitarRedefinicaoSenha,
-  enviarVerificacaoEmail,
 } from '@/src/servicos/firebase/conta';
-import { TelaBase, AvisoAutenticacao, EntradaAnimada, BotaoAnimado } from '@/src/componentes';
 import type { Navegar } from '@/src/tipos/navegacao';
 
 export type PropriedadesTelaConta = {
@@ -151,7 +151,7 @@ export function TelaConta({ navegar, usuario }: PropriedadesTelaConta) {
               <Image
                 accessibilityLabel="Foto de perfil"
                 contentFit="cover"
-                source={require('@/assets/images/FIORI.jpg')}
+                source={require('@/assets/images/publifiori.png')}
                 style={estilos.accountAvatarImage}
               />
             </View>
